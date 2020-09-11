@@ -1,0 +1,12 @@
+[package]
+name = "bls-remote-signer"
+version = "0.1.0"
+authors = ["Sigma Prime <contact@sigmaprime.io>"]
+edition = "2018"
+
+[dependencies]
+clap = "2.33.0"
+client = { path = "./client" }
+environment = { path = "./environment" }
+slog = { version = "2.5.2", features = ["max_level_trace"] }
+version = { path = "./version" }

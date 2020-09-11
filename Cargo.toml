@@ -1,0 +1,7 @@
+[workspace]
+members = [
+	"bls-remote-signer",
+	"bls-remote-signer/client",
+	"bls-remote-signer/environment",
+	"bls-remote-signer/version"
+]

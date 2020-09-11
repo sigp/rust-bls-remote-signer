@@ -1,0 +1,12 @@
+[package]
+name = "client"
+version = "0.1.0"
+authors = ["Herman Junge <herman@sigmaprime.io>"]
+edition = "2018"
+
+[dependencies]
+environment = { path = "../environment" }
+futures = "0.3.5"
+hyper = "0.13.5"
+serde = { version = "1.0.110", features = ["derive"] }
+slog = "2.5.2"
