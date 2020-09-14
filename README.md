@@ -62,11 +62,13 @@ FLAGS:
     -V, --version    Prints version information
 
 OPTIONS:
-        --debug-level <LEVEL>      The verbosity level for emitting logs. [default: info]  [possible values:
-                                   info, debug, trace, warn, error, crit]
-        --log-format <FORMAT>      Specifies the format used for logging. [possible values: JSON]
-        --logfile <FILE>           File path where output will be written.
-        --storage-raw-dir <DIR>    Data directory for private keys in raw files.
+        --debug-level <LEVEL>         The verbosity level for emitting logs. [default: info]  [possible values:
+                                      info, debug, trace, warn, error, crit]
+        --listen-address <ADDRESS>    The address to listen for TCP connections. [default: 0.0.0.0]
+        --log-format <FORMAT>         Specifies the format used for logging. [possible values: JSON]
+        --logfile <FILE>              File path where output will be written.
+        --port <PORT>                 The TCP port to listen on. [default: 9000]
+        --storage-raw-dir <DIR>       Data directory for private keys in raw files.
 ```
 
 ## TODO
@@ -75,7 +77,7 @@ OPTIONS:
   - [x] Executable boilerplate
   - [ ] Actual HTTP API server
     - [x] Server boilerplate
-      - [ ] Allow for configuration of `listen_address` and `port`
+      - [x] Allow for configuration of `listen_address` and `port`
     - [x] Implement `/upcheck`
     - [ ] Implement `/publicKeys` (respond NOT IMPLEMENTED)
     - [ ] Implement `/sign/{public-key}` (respond NOT IMPLEMENTED)

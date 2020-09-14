@@ -14,7 +14,7 @@ impl Default for Config {
     fn default() -> Self {
         Config {
             listen_address: Ipv4Addr::new(127, 0, 0, 1),
-            port: 5052,
+            port: 9000,
         }
     }
 }

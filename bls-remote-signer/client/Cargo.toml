@@ -5,6 +5,7 @@ authors = ["Herman Junge <herman@sigmaprime.io>"]
 edition = "2018"
 
 [dependencies]
+clap = "2.33.0"
 environment = { path = "../environment" }
 futures = "0.3.5"
 hyper = "0.13.5"

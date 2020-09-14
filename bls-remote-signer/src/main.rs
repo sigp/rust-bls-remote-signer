@@ -49,6 +49,22 @@ fn main() {
                 .global(true)
                 .default_value("info"),
         )
+        .arg(
+            Arg::with_name("listen-address")
+                .long("listen-address")
+                .value_name("ADDRESS")
+                .help("The address to listen for TCP connections.")
+                .default_value("0.0.0.0")
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("port")
+                .long("port")
+                .value_name("PORT")
+                .help("The TCP port to listen on.")
+                .default_value("9000")
+                .takes_value(true),
+        )
         .get_matches();
 
     let result = run(&matches);
@@ -95,7 +111,7 @@ fn run(matches: &ArgMatches) -> Result<(), String> {
 
     let client = environment
         .runtime()
-        .block_on(Client::new(runtime_context))
+        .block_on(Client::new(runtime_context, matches))
         .map_err(|e| format!("Failed to init Rest API: {}", e))?;
 
     // Block this thread until we get a ctrl-c or a task sends a shutdown signal.
