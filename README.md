@@ -75,12 +75,13 @@ OPTIONS:
 
 - [ ] Basic implementation
   - [x] Executable boilerplate
-  - [ ] Actual HTTP API server
+  - [x] Actual HTTP API server
     - [x] Server boilerplate
       - [x] Allow for configuration of `listen_address` and `port`
     - [x] Implement `/upcheck`
-    - [ ] Implement `/publicKeys` (respond NOT IMPLEMENTED)
-    - [ ] Implement `/sign/{public-key}` (respond NOT IMPLEMENTED)
+    - [x] Implement `/publicKeys` (respond NOT IMPLEMENTED)
+    - [x] Implement `/sign/{public-key}` (respond NOT IMPLEMENTED and the key sent)
+    - [x] Respond 404 for everything else
   - [ ] Backend
     - [ ] Generic crate
       - [ ] CLI option for `--storage-raw-dir` and pass it to the client
@@ -111,7 +112,7 @@ OPTIONS:
 - [ ] Filter by the `message` field
   - [ ] Middleware REST API
   - [ ] Built-in middleware
-  - [ ] Flag to enforce the `message` field and compare it to the signing root.
+  - [ ] Flag to enforce the `message` field and compare it to the signing root
 - [ ] TLS/SSL support for requests
 - [ ] Authentication by HTTP Header support
 - [ ] Confidential computing support (e.g. Intel SGX)
