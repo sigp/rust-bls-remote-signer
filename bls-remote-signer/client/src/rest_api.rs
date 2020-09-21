@@ -1,4 +1,5 @@
-use crate::{config::Config, router::Context};
+use crate::config::Config;
+use client_backend::Backend;
 use environment::TaskExecutor;
 use futures::future::TryFutureExt;
 use hyper::server::conn::AddrStream;
@@ -8,15 +9,25 @@ use slog::{info, warn};
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-pub fn start_server(executor: TaskExecutor, config: Config) -> Result<SocketAddr, hyper::Error> {
+pub struct Context {
+    pub config: Config,
+    pub executor: TaskExecutor,
+    pub log: slog::Logger,
+    pub backend: Backend,
+}
+
+pub fn start_server(
+    executor: TaskExecutor,
+    config: Config,
+    backend: Backend,
+) -> Result<SocketAddr, hyper::Error> {
     let log = executor.log();
 
     let context = Arc::new(Context {
         executor: executor.clone(),
         log: log.clone(),
         config: config.clone(),
-        // TODO
-        // We should pass our backend here.
+        backend,
     });
 
     // Define the function that will build the request handler.

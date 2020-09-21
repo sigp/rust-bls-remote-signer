@@ -1,15 +1,10 @@
 [package]
-name = "client"
+name = "backend"
 version = "0.1.0"
 authors = ["Herman Junge <herman@sigmaprime.io>"]
 edition = "2018"
 
 [dependencies]
-client_backend = { path = "../backend", package = "backend" }
 clap = "2.33.0"
-environment = { path = "../environment" }
-futures = "0.3.5"
-hyper = "0.13.5"
 serde = { version = "1.0.110", features = ["derive"] }
-serde_json = "1.0.52"
 slog = "2.5.2"

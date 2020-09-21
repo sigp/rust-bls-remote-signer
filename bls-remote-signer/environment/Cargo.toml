@@ -13,3 +13,4 @@ slog-async = "2.5.0"
 slog-json = "2.3.0"
 slog-term = "2.5.0"
 tokio = { version = "0.2.21", features = ["macros", "rt-threaded"] }
+sloggers = "1.0.0"

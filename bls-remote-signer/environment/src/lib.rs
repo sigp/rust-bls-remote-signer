@@ -13,6 +13,7 @@ use futures::channel::{
 };
 use futures::{future, StreamExt};
 use slog::{info, o, Drain, Level, Logger};
+use sloggers::{null::NullLoggerBuilder, Build};
 use std::cell::RefCell;
 use std::ffi::OsStr;
 use std::fs::{rename as FsRename, OpenOptions};
@@ -39,6 +40,18 @@ impl EnvironmentBuilder {
         Self {
             runtime: None,
             log: None,
+        }
+    }
+
+    /// Specifies that all logs should be sent to `null` (i.e., ignored).
+    pub fn null_logger(mut self) -> Result<Self, String> {
+        let log_builder = NullLoggerBuilder;
+        match log_builder.build() {
+            Ok(null_logger) => {
+                self.log = Some(null_logger);
+                Ok(self)
+            }
+            Err(e) => Err(format!("Failed to start null logger: {:?}", e)),
         }
     }
 

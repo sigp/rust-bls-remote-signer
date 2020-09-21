@@ -1,17 +1,27 @@
 pub mod api_error;
+
+mod backend;
 mod config;
+mod handler;
 mod rest_api;
 mod router;
+mod upcheck;
 
 use clap::ArgMatches;
+use client_backend::Backend;
 use config::Config;
 use environment::RuntimeContext;
 use std::net::Ipv4Addr;
+use std::net::SocketAddr;
 
-pub struct Client {}
+pub struct Client {
+    listening_address: SocketAddr,
+}
 
 impl Client {
     pub async fn new(context: RuntimeContext, cli_args: &ArgMatches<'_>) -> Result<Self, String> {
+        let log = context.executor.log();
+
         let mut config = Config::default();
 
         if let Some(address) = cli_args.value_of("listen-address") {
@@ -26,12 +36,16 @@ impl Client {
                 .map_err(|_| "port is not a valid u16.")?;
         }
 
-        // TODO
-        // Setup backend
+        let backend = Backend::new(cli_args, log)?;
 
-        let _listening_address = rest_api::start_server(context.executor, config)
+        // It is useful to get the listening address if you have set up your port to be 0.
+        let listening_address = rest_api::start_server(context.executor, config, backend)
             .map_err(|e| format!("Failed to start HTTP API: {:?}", e))?;
 
-        Ok(Self {})
+        Ok(Self { listening_address })
+    }
+
+    pub fn get_listening_address(&self) -> SocketAddr {
+        self.listening_address
     }
 }

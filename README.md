@@ -12,23 +12,25 @@ One goal of this package is to be standard compliant, that is, following an API 
 
 ### Standard
 
-#### `/upcheck`
+#### `GET /upcheck`
 
 * Response
-  * Returns `200` if the service is running.
+  * Returns `200` and a JSON payload containing `{"status": "OK"}` if the service is running.
 
-#### `/publicKeys`
+#### `GET /publicKeys`
 
 * Response
-  * Returns `200` and a JSON containing a list of the BLS public keys available.
-  * Returns `404` and an empty payload if there are no keys available.
+  * Returns `200` and a JSON payload containing a list of the BLS public keys available.
+  * Returns `404` and an empty JSON payload if there are no keys available.
 
-#### `/sign/{public-key}`
+#### `POST /sign/:public_key`
 
 * Request
   * A JSON payload with the parameters
     * `signingRoot`: [REQUIRED] A string representation of the hexadecimal value to be signed.
-    * `message`: [OPTIONAL] A string contained a serialization of the message to be signed. This field will be ignored by the signer, however, it can be useful in the implementation of middlewares and filters.
+    * Any other field will be **ignored**
+      * To allow for the installing of filter enhancements and/or plugins.
+      * A limit on the size of the payload will be implemented as a control.
 
 * Response
   * Returns `200` and a JSON containing the `signature` field, as a string representation of an hexadecimal value.
@@ -49,7 +51,12 @@ make test
 
 ### Storing the private keys as raw files
 
-* (TODO)
+* Steps to store a private key
+  * Choose an empty directory, as the backend will parse every file looking for keys.
+  * Create a file named after the **hex representation of the public key without 0x**.
+  * Write the **hex representation of the private key without 0x**.
+  * Store the file in your chosen directory.
+  * Use this directory as a command line parameter (`--storage-raw-dir`)
 
 ### Command line flags
 
@@ -73,42 +80,14 @@ OPTIONS:
 
 ## TODO
 
-- [ ] Basic implementation
-  - [x] Executable boilerplate
-  - [x] Actual HTTP API server
-    - [x] Server boilerplate
-      - [x] Allow for configuration of `listen_address` and `port`
-    - [x] Implement `/upcheck`
-    - [x] Implement `/publicKeys` (respond NOT IMPLEMENTED)
-    - [x] Implement `/sign/{public-key}` (respond NOT IMPLEMENTED and the key sent)
-    - [x] Respond 404 for everything else
-  - [ ] Backend
-    - [ ] Generic crate
-      - [ ] CLI option for `--storage-raw-dir` and pass it to the client
-    - [ ] Raw files
-      - [ ] Retrieving key from storage
-      - [ ] Document how to prepare the raw files in this very README
-      - [ ] Implement `/publicKeys` response
-      - [ ] Implement `/sign/{public-key}`
-        - [ ] Just dump the contents of the key
-        - [ ] Perform signature
-  - [ ] Complete testing of features
-  - [ ] CI/CD pipeline
-- [ ] Produce an EIP for the API
-  - [ ] Write EIP draft into this repository
-  - [ ] Publish EIP github issue
-- [ ] Intermediate implementation
-  - [ ] Allow to opt between milagro and blst libraries
-  - [ ] Zeroize private key after use
-  - [ ] Metrics
-  - [ ] Benchmarking & Profiling
-  - [ ] Release management & Arch builds
+Please, check this repository's issue for the [Implementation Tracking](https://github.com/sigp/rust-bls-remote-signer/issues/1)
 
 ## Wishlist / Roadmap
 
 - [ ] EIP standard compliant
 - [ ] Support EIP-2335, BLS12-381 keystore
 - [ ] Support storage in AWS Cloud HSM
+- [ ] Route with the `warp` library
 - [ ] Filter by the `message` field
   - [ ] Middleware REST API
   - [ ] Built-in middleware

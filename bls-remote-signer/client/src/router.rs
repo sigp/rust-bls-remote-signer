@@ -1,22 +1,18 @@
-use crate::{api_error::ApiError, config::Config};
-use environment::TaskExecutor;
+use crate::api_error::ApiError;
+use crate::backend::{get_public_keys, sign_message};
+use crate::handler::Handler;
+use crate::rest_api::Context;
+use crate::upcheck::upcheck;
 use hyper::{Body, Method, Request, Response};
 use slog::debug;
 use std::sync::Arc;
 use std::time::Instant;
-
-pub struct Context {
-    pub config: Config,
-    pub executor: TaskExecutor,
-    pub log: slog::Logger,
-}
 
 pub async fn on_http_request(
     req: Request<Body>,
     ctx: Arc<Context>,
 ) -> Result<Response<Body>, ApiError> {
     let path = req.uri().path().to_string();
-
     let received_instant = Instant::now();
     let log = ctx.log.clone();
 
@@ -43,74 +39,59 @@ pub async fn on_http_request(
     }
 }
 
-async fn route(req: Request<Body>, _ctx: Arc<Context>) -> Result<Response<Body>, ApiError> {
+async fn route(req: Request<Body>, ctx: Arc<Context>) -> Result<Response<Body>, ApiError> {
     let path = req.uri().path().to_string();
     let method = req.method().clone();
+    let ctx = ctx.clone();
+    let handler = Handler::new(req, ctx)?;
 
     match (method, path.as_ref()) {
-        (Method::GET, "/upcheck") => Ok(Response::new(Body::from("OK"))),
-        (Method::GET, "/publicKeys") => {
-            Err(ApiError::NotImplemented("Not Implemented".to_string()))
-        }
-        (Method::POST, _) => route_post(path.as_ref()),
+        (Method::GET, "/upcheck") => handler.static_value(upcheck()).await?.serde_encodings(),
+
+        (Method::GET, "/publicKeys") => handler
+            .in_blocking_task(get_public_keys)
+            .await?
+            .serde_encodings(),
+
+        // TODO
+        // Implement dynamic routes with `warp`.
+        (Method::POST, _) => route_post(&path, handler).await,
+
         _ => Err(ApiError::NotFound(
             "Request path and/or method not found.".to_string(),
         )),
     }
 }
 
-fn route_post(path: &str) -> Result<Response<Body>, ApiError> {
+/// Responds to all the POST requests.
+///
+/// Should be deprecated once a better routing library is used, such as `warp`
+async fn route_post(path: &str, handler: Handler) -> Result<Response<Body>, ApiError> {
     let mut path_segments = path[1..].trim_end_matches('/').split('/');
 
-    let first_segment = match path_segments.next() {
-        Some("sign") => "sign",
-        _ => "",
-    };
+    match path_segments.next() {
+        Some("sign") => {
+            let path_segments_count = path_segments.clone().count();
 
-    if first_segment == "" {
-        return Err(ApiError::NotFound(
+            if path_segments_count == 0 {
+                return Err(ApiError::BadRequest(
+                    "Parameter 'public_key' needed in route /sign/:public_key".to_string(),
+                ));
+            }
+
+            if path_segments_count > 1 {
+                return Err(ApiError::BadRequest(
+                    "Only one path segment is allowed after /sign".to_string(),
+                ));
+            }
+
+            handler
+                .in_blocking_task(sign_message)
+                .await?
+                .serde_encodings()
+        }
+        _ => Err(ApiError::NotFound(
             "Request path and/or method not found.".to_string(),
-        ));
+        )),
     }
-
-    let path_segments_count = path_segments.clone().count();
-
-    if path_segments_count == 0 {
-        return Err(ApiError::BadRequest(
-            "Parameter 'public-key' needed in route /sign/{public-key}".to_string(),
-        ));
-    }
-
-    if path_segments_count > 1 {
-        return Err(ApiError::BadRequest(
-            "Only one segment is allowed after /sign".to_string(),
-        ));
-    }
-
-    match backend_sign(path_segments.next().unwrap()) {
-        Err(BackendError::ParameterIsNotAPublicKey(param)) => Err(ApiError::BadRequest(format!(
-            "Parameter is not a public key: {}",
-            param
-        ))),
-        Err(BackendError::KeyNotFound(pk)) => Err(ApiError::BadRequest(format!(
-            "Public key not found: {}",
-            pk
-        ))),
-        Ok(pk) => Err(ApiError::NotImplemented(format!(
-            "Not Implemented (You sent {})",
-            pk
-        ))),
-    }
-}
-
-// PLACEHOLDER. Should go to its own crate.
-#[allow(dead_code)]
-enum BackendError {
-    ParameterIsNotAPublicKey(String),
-    KeyNotFound(String),
-}
-
-// PLACEHOLDER. Should go to its own crate.
-fn backend_sign(public_key: &str) -> Result<String, BackendError> {
-    Ok(public_key.to_string())
 }
