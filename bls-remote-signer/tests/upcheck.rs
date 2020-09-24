@@ -1,13 +1,18 @@
-use api_test::ApiTest;
-
-// Workaround (adding `pub` to get rid of a nagging unused code warning,
-// when not using a helper in one file, even when we are using it in other.
-// https://github.com/rust-lang/rust/issues/46379#issuecomment-548787629
-pub mod api_test;
+use helpers::ApiTest;
+use tempdir::TempDir;
 
 #[test]
-fn upcheck() {
-    let api_test = ApiTest::new();
+fn integration_get_upcheck() {
+    let tmp_dir = TempDir::new("bls-remote-signer-test").unwrap();
+    let arg_vec = vec![
+        "this_test",
+        "--port",
+        "0",
+        "--storage-raw-dir",
+        tmp_dir.path().to_str().unwrap(),
+    ];
+
+    let api_test = ApiTest::new(arg_vec);
 
     let url = format!("{}/upcheck", api_test.address);
     let resp = ApiTest::http_get(url);

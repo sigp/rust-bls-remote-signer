@@ -1,11 +1,11 @@
 use crate::BackendError;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 /// The storage medium for the private keys used by a `Backend`.
 pub trait Storage: Send + Sync {
-    // TODO
-    // - Should return a struct instead of a Vec<String>.
-    // - Function documentation.
+    /// Queries storage for the available keys to sign.
+    /// Backend consumes this function and either encapsulates the `Vec<String>`
+    /// into a `PublicKeys` struct, or bubbles up the `BackendError`.
     fn get_public_keys(self: Box<Self>) -> Result<Vec<String>, BackendError>;
 
     // TODO
@@ -25,7 +25,8 @@ impl Clone for Box<dyn Storage> {
     }
 }
 
-#[derive(Serialize)]
+/// Contains the response to the `get_public_keys` API.
+#[derive(Deserialize, Serialize)]
 pub struct PublicKeys {
     pub public_keys: Vec<String>,
 }

@@ -1,0 +1,15 @@
+[package]
+name = "helpers"
+version = "0.1.0"
+authors = ["Herman Junge <herman@sigmaprime.io>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = "2.33.0"
+client = { path = "../../bls-remote-signer/client" }
+environment = { path = "../../bls-remote-signer/environment" }
+reqwest = { version = "0.10", features = ["blocking", "json"] }
+serde_json = "1.0.52"
+tempdir = "0.3.7"

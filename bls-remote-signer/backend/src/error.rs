@@ -18,3 +18,9 @@ impl std::fmt::Display for BackendError {
         }
     }
 }
+
+impl From<std::io::Error> for BackendError {
+    fn from(e: std::io::Error) -> BackendError {
+        BackendError::StorageError(format!("{}", e))
+    }
+}

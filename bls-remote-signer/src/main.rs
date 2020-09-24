@@ -19,13 +19,6 @@ fn main() {
             while running their validators in more permisive and/or scalable environments.",
         )
         .arg(
-            Arg::with_name("storage-dummy")
-                .long("storage-dummy")
-                .help("Dummy flag to check multi storage support")
-                .hidden(true)
-                .takes_value(false),
-        )
-        .arg(
             Arg::with_name("storage-raw-dir")
                 .long("storage-raw-dir")
                 .value_name("DIR")

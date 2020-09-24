@@ -4,5 +4,7 @@ members = [
 	"bls-remote-signer/backend",
 	"bls-remote-signer/client",
 	"bls-remote-signer/environment",
-	"bls-remote-signer/version"
+	"bls-remote-signer/version",
+
+	"testing/helpers"
 ]

@@ -1,5 +1,5 @@
 use hyper::{Body, Response, StatusCode};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::to_string;
 use std::error::Error as StdError;
 
@@ -9,6 +9,11 @@ pub enum ApiError {
     NotImplemented(String),
     BadRequest(String),
     NotFound(String),
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct ApiErrorDesc {
+    pub error: String,
 }
 
 pub type ApiResult = Result<Response<Body>, ApiError>;
@@ -22,11 +27,6 @@ impl ApiError {
             ApiError::NotFound(desc) => (StatusCode::NOT_FOUND, desc),
         }
     }
-}
-
-#[derive(Serialize)]
-struct ApiErrorDesc {
-    error: String,
 }
 
 impl Into<Response<Body>> for ApiError {
