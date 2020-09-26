@@ -4,7 +4,7 @@
 
 Simple HTTP BLS signer service.
 
-This service is designed to be consumed by Ethereum 2.0 clients, looking for a more secure avenue to store their BLS12-381 private keys, while running their validators in more permisive and/or scalable environments.
+This service is designed to be consumed by Ethereum 2.0 clients, looking for a more secure avenue to store their BLS12-381 secret keys, while running their validators in more permisive and/or scalable environments.
 
 One goal of this package is to be standard compliant, that is, following an API definition published on an Ethereum Improvement Proposal. Please refer to the [wishlist](#wishlist--roadmap) in this very document for a list of advanced features.
 
@@ -34,7 +34,7 @@ One goal of this package is to be standard compliant, that is, following an API 
 
 * Response
   * Returns `200` and a JSON containing the `signature` field, as a string representation of an hexadecimal value.
-  * Returns `404` if there is no private key matching the given public key.
+  * Returns `404` if there is no secret key matching the given public key.
   * Returns `400` on malformed JSON payloads.
 
 ## Build instructions
@@ -49,12 +49,12 @@ make test
 ```
 ## Running the signer
 
-### Storing the private keys as raw files
+### Storing the secret keys as raw files
 
-* Steps to store a private key
+* Steps to store a secret key
   * Choose an empty directory, as the backend will parse every file looking for keys.
   * Create a file named after the **hex representation of the public key without 0x**.
-  * Write the **hex representation of the private key without 0x**.
+  * Write the **hex representation of the secret key without 0x**.
   * Store the file in your chosen directory.
   * Use this directory as a command line parameter (`--storage-raw-dir`)
 
@@ -75,7 +75,7 @@ OPTIONS:
         --log-format <FORMAT>         Specifies the format used for logging. [possible values: JSON]
         --logfile <FILE>              File path where output will be written.
         --port <PORT>                 The TCP port to listen on. [default: 9000]
-        --storage-raw-dir <DIR>       Data directory for private keys in raw files.
+        --storage-raw-dir <DIR>       Data directory for secret keys in raw files.
 ```
 
 ## TODO

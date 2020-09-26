@@ -258,7 +258,7 @@ impl Environment {
         let ctrlc_send_c = RefCell::new(Some(ctrlc_send));
         ctrlc::set_handler(move || {
             if let Some(ctrlc_send) = ctrlc_send_c.try_borrow_mut().unwrap().take() {
-                ctrlc_send.send(()).expect("Error sending ctrl-c message");
+                ctrlc_send.send(()).expect("Error sending ctrl-c message.");
             }
         })
         .map_err(|e| format!("Could not set ctrlc handler: {:?}", e))?;

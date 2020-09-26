@@ -1,12 +1,9 @@
-use crate::{BackendError, Storage};
-use lazy_static::lazy_static;
-use regex::Regex;
+use crate::{BackendError, Storage, PUBLIC_KEY_REGEX};
 use std::fs::read_dir;
+use std::fs::File;
+use std::io::prelude::Read;
+use std::io::BufReader;
 use std::path::PathBuf;
-
-lazy_static! {
-    static ref PUBLIC_KEY_REGEX: Regex = Regex::new(r"[0-9a-fA-F]{96}").unwrap();
-}
 
 #[derive(Clone)]
 pub struct StorageRawDir {
@@ -14,8 +11,8 @@ pub struct StorageRawDir {
 }
 
 impl StorageRawDir {
-    /// Initialized the storage with the given path, verifying
-    /// whether if it is a directory and if its available to the user.
+    /// Initializes the storage with the given path, verifying
+    /// whether it is a directory and if its available to the user.
     /// Does not list, nor verify the contents of the directory.
     pub fn new(path: &str) -> Result<Self, String> {
         let path = PathBuf::from(path);
@@ -28,37 +25,53 @@ impl StorageRawDir {
             return Err("Path is not a directory.".to_string());
         }
 
-        match read_dir(path.clone()) {
-            Ok(_) => Ok(Self { path }),
-            Err(e) => Err(format!("{}", e)),
-        }
+        read_dir(path.clone()).map_err(|e| format!("{:?}", e.kind()))?;
+
+        Ok(Self { path })
     }
 }
 
 impl Storage for StorageRawDir {
     /// List all the files in the directory having a BLS public key name.
     /// This function DOES NOT check the contents of each file.
-    /// The latter functionality is performed by `self.get_private_key()`.
     fn get_public_keys(self: Box<Self>) -> Result<Vec<String>, BackendError> {
-        let entries = read_dir(self.path).map_err(|e| BackendError::StorageError(e.to_string()));
+        let entries = read_dir(self.path).map_err(BackendError::from)?;
 
         // We are silently suppressing errors in this chain
         // because we only care about files actually passing these filters.
-        let public_keys: Vec<String> = entries? // unwrap. We checked for error above
-            .filter_map(|entry| entry.ok()) // consume the Ok(s)
-            .filter(|entry| !entry.path().is_dir()) // only take the files, not the dirs
-            .map(|entry| entry.file_name().into_string()) // OsString to Result<String, OsString>
-            .filter_map(|entry| entry.ok()) // consume the Ok(s)
-            .filter(|name| PUBLIC_KEY_REGEX.is_match(name)) // only take the public key names
+        let public_keys: Vec<String> = entries
+            .filter_map(|entry| entry.ok())
+            .filter(|entry| !entry.path().is_dir())
+            .map(|entry| entry.file_name().into_string())
+            .filter_map(|entry| entry.ok())
+            .filter(|name| PUBLIC_KEY_REGEX.is_match(name))
             .collect();
 
         Ok(public_keys)
     }
 
-    fn get_private_key(self: Box<Self>, _input: &str) -> Result<Vec<u8>, BackendError> {
-        todo!()
+    /// Gets a requested secret key by their reference, its public key.
+    /// This function DOES NOT check the contents of the retrieved file.
+    fn get_secret_key(self: Box<Self>, input: &str) -> Result<String, BackendError> {
+        let file = File::open(self.path.join(input)).map_err(|e| match e.kind() {
+            std::io::ErrorKind::NotFound => BackendError::KeyNotFound(input.to_string()),
+            _ => e.into(),
+        })?;
+        let mut buf_reader = BufReader::new(file);
+
+        // TODO
+        // See note on "zeroization" at this crate's `lib.rs`.
+        let mut secret_key = String::new();
+        buf_reader.read_to_string(&mut secret_key)?;
+
+        // Remove that `\n` without cloning.
+        secret_key.pop();
+
+        // Moving the value to the caller.
+        Ok(secret_key)
     }
 
+    /// Needed for the Backend struct to implement Clone
     fn box_clone(&self) -> Box<dyn Storage> {
         Box::new(self.clone())
     }
@@ -77,61 +90,88 @@ mod tests {
         // All good and fancy, let's make the dir innacessible now.
         set_permissions(tmp_dir.path(), 0o40311);
 
-        // TODO
-        // Pay attention to this error message --> Permission denied (os error 13)
-        // We may want to switch to a regular expression strategy.
-        match storage.get_public_keys() {
-            Ok(_) => panic!("This invocation to Backend::new() should return error"),
-            Err(e) => assert_eq!(e.to_string(), "Storage: Permission denied (os error 13)",),
-        }
+        let result = storage.get_public_keys();
 
         // Give permissions back, we want the tempdir to be deleted.
         set_permissions(tmp_dir.path(), 0o40755);
+
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "Storage error: PermissionDenied."
+        );
     }
 
     #[test]
-    fn storage_raw_dir_no_files_in_dir() {
+    fn storage_raw_dir_get_sk_no_files_in_dir() {
         let (storage, _tmp_dir) = new_storage_with_tmp_dir();
 
-        match storage.get_public_keys() {
-            Ok(keys) => assert_eq!(keys.len(), 0),
-            Err(e) => panic!("We should not be getting an err here: {}", e),
-        }
+        assert_eq!(storage.get_public_keys().unwrap().len(), 0);
     }
 
     #[test]
-    fn storage_raw_dir_there_are_files_in_dir_none_are_keys() {
+    fn storage_raw_dir_get_sk_there_are_files_in_dir_none_are_keys() {
         let (storage, tmp_dir) = new_storage_with_tmp_dir();
-        add_sub_dir(&tmp_dir); // To spice things up.
+        add_sub_dirs(&tmp_dir);
         add_non_key_files(&tmp_dir);
 
-        match storage.get_public_keys() {
-            Ok(keys) => assert_eq!(keys.len(), 0),
-            Err(e) => panic!("We should not be getting an err here: {}", e),
-        }
+        assert_eq!(storage.get_public_keys().unwrap().len(), 0);
     }
 
     #[test]
-    fn storage_raw_dir_not_all_files_have_public_key_names() {
+    fn storage_raw_dir_get_sk_not_all_files_have_public_key_names() {
         let (storage, tmp_dir) = new_storage_with_tmp_dir();
-        add_sub_dir(&tmp_dir);
+        add_sub_dirs(&tmp_dir);
         add_key_files(&tmp_dir);
         add_non_key_files(&tmp_dir);
 
-        match storage.get_public_keys() {
-            Ok(keys) => assert_eq!(keys.len(), 3),
-            Err(e) => panic!("We should not be getting an err here: {}", e),
-        }
+        assert_eq!(storage.get_public_keys().unwrap().len(), 3);
     }
 
     #[test]
-    fn storage_raw_dir_all_files_do_have_public_key_names() {
+    fn storage_raw_dir_get_sk_all_files_do_have_public_key_names() {
         let (storage, tmp_dir) = new_storage_with_tmp_dir();
         add_key_files(&tmp_dir);
 
-        match storage.get_public_keys() {
-            Ok(keys) => assert_eq!(keys.len(), 3),
-            Err(e) => panic!("We should not be getting an err here: {}", e),
-        }
+        assert_eq!(storage.get_public_keys().unwrap().len(), 3);
+    }
+
+    #[test]
+    fn storage_raw_dir_get_sk_unaccessible_file() {
+        let (storage, tmp_dir) = new_storage_with_tmp_dir();
+        add_key_files(&tmp_dir);
+
+        set_permissions(tmp_dir.path(), 0o40311);
+        set_permissions(&tmp_dir.path().join(PUBLIC_KEY_1), 0o40311);
+
+        let result = storage.get_secret_key(PUBLIC_KEY_1);
+
+        set_permissions(tmp_dir.path(), 0o40755);
+        set_permissions(&tmp_dir.path().join(PUBLIC_KEY_1), 0o40755);
+
+        assert_eq!(
+            result.unwrap_err().to_string(),
+            "Storage error: PermissionDenied."
+        );
+    }
+
+    #[test]
+    fn storage_raw_dir_get_sk_key_does_not_exist() {
+        let (storage, _tmp_dir) = new_storage_with_tmp_dir();
+
+        assert_eq!(
+            storage
+                .get_secret_key(PUBLIC_KEY_1)
+                .unwrap_err()
+                .to_string(),
+            format!("Key not found: {}.", PUBLIC_KEY_1)
+        );
+    }
+
+    #[test]
+    fn storage_raw_dir_get_sk_key_does_exist() {
+        let (storage, tmp_dir) = new_storage_with_tmp_dir();
+        add_key_files(&tmp_dir);
+
+        assert_eq!(storage.get_secret_key(PUBLIC_KEY_1).unwrap(), SECRET_KEY_1);
     }
 }

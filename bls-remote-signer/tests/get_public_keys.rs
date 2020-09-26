@@ -29,7 +29,7 @@ fn integration_get_public_keys_all_files_in_dir_are_public_keys() {
 #[test]
 fn integration_get_public_keys_some_files_in_dir_are_public_keys() {
     let tmp_dir = TempDir::new("bls-remote-signer-test").unwrap();
-    add_sub_dir(&tmp_dir);
+    add_sub_dirs(&tmp_dir);
     add_key_files(&tmp_dir);
     add_non_key_files(&tmp_dir);
 
@@ -54,7 +54,7 @@ fn integration_get_public_keys_some_files_in_dir_are_public_keys() {
 #[test]
 fn integration_get_public_keys_no_files_in_dir_are_public_keys() {
     let tmp_dir = TempDir::new("bls-remote-signer-test").unwrap();
-    add_sub_dir(&tmp_dir);
+    add_sub_dirs(&tmp_dir);
     add_non_key_files(&tmp_dir);
 
     let arg_vec = vec![
@@ -70,6 +70,8 @@ fn integration_get_public_keys_no_files_in_dir_are_public_keys() {
     let resp = ApiTest::http_get(url);
     let resp: PublicKeys = serde_json::from_value(resp).unwrap();
 
+    // TODO
+    // We want to 404 on no keys
     assert_eq!(resp.public_keys.len(), 0);
 
     api_test.shutdown();
@@ -78,7 +80,7 @@ fn integration_get_public_keys_no_files_in_dir_are_public_keys() {
 #[test]
 fn integration_get_public_keys_directory_failure() {
     let tmp_dir = TempDir::new("bls-remote-signer-test").unwrap();
-    add_sub_dir(&tmp_dir);
+    add_sub_dirs(&tmp_dir);
     add_key_files(&tmp_dir);
     add_non_key_files(&tmp_dir);
 
@@ -99,16 +101,10 @@ fn integration_get_public_keys_directory_failure() {
 
     let resp: ApiErrorDesc = serde_json::from_value(resp).unwrap();
 
-    // TODO
-    // Pay attention to this error message --> Permission denied (os error 13)
-    // We may want to switch to a regular expression strategy.
-    assert_eq!(
-        resp.error,
-        String::from("Storage: Permission denied (os error 13)")
-    );
-
-    // Allow yourself to delete the tempdir.
+    // Be able to delete the tempdir afterward, regardless of this test result.
     set_permissions(tmp_dir.path(), 0o40755);
+
+    assert_eq!(resp.error, String::from("Storage error: PermissionDenied."));
 
     api_test.shutdown();
 }

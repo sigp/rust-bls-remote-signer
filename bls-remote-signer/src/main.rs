@@ -15,14 +15,14 @@ fn main() {
         .about(
             "Simple HTTP BLS signer service. \
             This service is designed to be consumed by Ethereum 2.0 clients, \
-            looking for a more secure avenue to store their BLS12-381 private keys, \
+            looking for a more secure avenue to store their BLS12-381 secret keys, \
             while running their validators in more permisive and/or scalable environments.",
         )
         .arg(
             Arg::with_name("storage-raw-dir")
                 .long("storage-raw-dir")
                 .value_name("DIR")
-                .help("Data directory for private keys in raw files."),
+                .help("Data directory for secret keys in raw files."),
         )
         .arg(
             Arg::with_name("logfile")
