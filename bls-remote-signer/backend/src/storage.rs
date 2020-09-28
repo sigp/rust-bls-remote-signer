@@ -1,5 +1,4 @@
 use crate::BackendError;
-use serde::{Deserialize, Serialize};
 
 /// The storage medium for the secret keys used by a `Backend`.
 pub trait Storage: Send + Sync {
@@ -23,10 +22,4 @@ impl Clone for Box<dyn Storage> {
     fn clone(&self) -> Box<dyn Storage> {
         self.box_clone()
     }
-}
-
-/// Contains the response to the `get_public_keys` API.
-#[derive(Deserialize, Serialize)]
-pub struct PublicKeys {
-    pub public_keys: Vec<String>,
 }

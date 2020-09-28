@@ -25,21 +25,21 @@ pub enum BackendError {
 impl std::fmt::Display for BackendError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            BackendError::InvalidSigningRoot(e) => write!(f, "Invalid signing root: {}.", e),
+            BackendError::InvalidSigningRoot(e) => write!(f, "Invalid signing root: {}", e),
 
-            BackendError::InvalidPublicKey(e) => write!(f, "Invalid public key: {}.", e),
-
-            // Feed it with the public key value used to retrieve it.
-            BackendError::InvalidSecretKey(e) => write!(f, "Invalid secret key: {}.", e),
+            BackendError::InvalidPublicKey(e) => write!(f, "Invalid public key: {}", e),
 
             // Feed it with the public key value used to retrieve it.
-            BackendError::KeyMismatch(e) => write!(f, "Key mismatch: {}.", e),
+            BackendError::InvalidSecretKey(e) => write!(f, "Invalid secret key: {}", e),
 
-            BackendError::KeyNotFound(e) => write!(f, "Key not found: {}.", e),
+            // Feed it with the public key value used to retrieve it.
+            BackendError::KeyMismatch(e) => write!(f, "Key mismatch: {}", e),
+
+            BackendError::KeyNotFound(e) => write!(f, "Key not found: {}", e),
 
             // Only outputs to string the first component of the tuple, accounting
             // for potential differences on error displays between OS distributions.
-            BackendError::StorageError(e, _) => write!(f, "Storage error: {}.", e),
+            BackendError::StorageError(e, _) => write!(f, "Storage error: {}", e),
         }
     }
 }

@@ -1,23 +1,16 @@
-use helpers::ApiTest;
-use tempdir::TempDir;
+mod upcheck {
+    use helpers::*;
 
-#[test]
-fn integration_get_upcheck() {
-    let tmp_dir = TempDir::new("bls-remote-signer-test").unwrap();
-    let arg_vec = vec![
-        "this_test",
-        "--port",
-        "0",
-        "--storage-raw-dir",
-        tmp_dir.path().to_str().unwrap(),
-    ];
+    #[test]
+    fn happy_path() {
+        let (test_signer, _tmp_dir) = set_up_api_test_signer_raw_dir();
 
-    let api_test = ApiTest::new(arg_vec);
+        let url = format!("{}/upcheck", test_signer.address);
 
-    let url = format!("{}/upcheck", api_test.address);
-    let resp = ApiTest::http_get(url);
+        let resp = http_get(&url);
+        assert_eq!(resp.status, 200);
+        assert_eq!(resp.json["status"], "OK");
 
-    assert_eq!(resp["status"], "OK");
-
-    api_test.shutdown();
+        test_signer.shutdown();
+    }
 }

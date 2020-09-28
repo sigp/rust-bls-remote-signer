@@ -38,12 +38,10 @@ impl Handler {
 
     /// The default behaviour is to return an error if any body is supplied in the request. Calling
     /// this function disables that error.
-    /*
     pub fn allow_body(mut self) -> Self {
         self.allow_body = true;
         self
     }
-    */
 
     /// Spawns `func` on the blocking executor.
     ///

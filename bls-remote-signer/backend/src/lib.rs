@@ -4,12 +4,11 @@ mod storage_raw_dir;
 mod utils;
 
 use clap::ArgMatches;
-use error::BackendError;
+pub use error::BackendError;
 use lazy_static::lazy_static;
 use milagro_bls::{PublicKey, SecretKey, Signature};
 use regex::Regex;
 use slog::{info, Logger};
-pub use storage::PublicKeys;
 use storage::Storage;
 use storage_raw_dir::StorageRawDir;
 use utils::{bytes96_to_hex_string, hex_string_to_bytes};
@@ -49,15 +48,13 @@ impl Backend {
                 })
                 .map_err(|e| format!("Storage Raw Dir: {}", e))
         } else {
-            Err("No backend supplied.".to_string())
+            Err("No storage type supplied.".to_string())
         }
     }
 
     /// Returns the available public keys in storage.
-    pub fn get_public_keys(self) -> Result<PublicKeys, BackendError> {
-        self.storage
-            .get_public_keys()
-            .map(|keys| PublicKeys { public_keys: keys })
+    pub fn get_public_keys(self) -> Result<Vec<String>, BackendError> {
+        self.storage.get_public_keys()
     }
 
     /// Signs the message with the requested key in storage.
@@ -68,12 +65,12 @@ impl Backend {
         signing_root: &str,
     ) -> Result<String, BackendError> {
         if !PUBLIC_KEY_REGEX.is_match(public_key) || public_key.len() != 96 {
-            return Err(BackendError::InvalidPublicKey(format!("{}", public_key)));
+            return Err(BackendError::InvalidPublicKey(public_key.to_string()));
         }
 
         if signing_root.len() < 4 || &signing_root[0..2] != "0x" {
             return Err(BackendError::InvalidSigningRoot(format!(
-                "{}; Value should be a non-empty hexadecimal starting with 0x",
+                "{}; Value should be a non-empty hexadecimal starting with 0x.",
                 signing_root
             )));
         }
@@ -96,7 +93,7 @@ impl Backend {
         Ok(signature)
     }
 
-    /// Computes the public key from the retrieved `secret_key`, and compares it
+    /// Computes the public key from the retrieved `secret_key` and compares it
     /// with the given `public_key` parameter.
     fn validate_bls_pair(public_key: &str, secret_key: &str) -> Result<SecretKey, BackendError> {
         let secret_key: Vec<u8> = hex_string_to_bytes(&secret_key).map_err(|e| {
@@ -113,7 +110,7 @@ impl Backend {
             .zip(pk_param_as_bytes.iter())
             .all(|(a, b)| a == b)
         {
-            return Err(BackendError::KeyMismatch(format!("{}", public_key)));
+            return Err(BackendError::KeyMismatch(public_key.to_string()));
         };
 
         Ok(secret_key)
@@ -121,7 +118,7 @@ impl Backend {
 }
 
 #[cfg(test)]
-pub mod tests {
+pub mod tests_commons {
     use super::*;
     use helpers::*;
     use sloggers::{null::NullLoggerBuilder, Build};
@@ -134,12 +131,12 @@ pub mod tests {
         (Box::new(storage), tmp_dir)
     }
 
-    fn get_null_logger() -> Logger {
+    pub fn get_null_logger() -> Logger {
         let log_builder = NullLoggerBuilder;
         log_builder.build().unwrap()
     }
 
-    fn new_backend_for_get_public_keys() -> (Backend, TempDir) {
+    pub fn new_backend_for_get_public_keys() -> (Backend, TempDir) {
         let tmp_dir = TempDir::new("bls-remote-signer-test").unwrap();
 
         let matches = set_matches(vec![
@@ -156,7 +153,7 @@ pub mod tests {
         (backend, tmp_dir)
     }
 
-    fn new_backend_for_signing() -> (Backend, TempDir) {
+    pub fn new_backend_for_signing() -> (Backend, TempDir) {
         let (backend, tmp_dir) = new_backend_for_get_public_keys();
 
         // This one has the whole fauna.
@@ -168,36 +165,44 @@ pub mod tests {
         (backend, tmp_dir)
     }
 
-    fn assert_backend_new_error(matches: &ArgMatches, error_msg: &str) {
+    pub fn assert_backend_new_error(matches: &ArgMatches, error_msg: &str) {
         match Backend::new(matches, &get_null_logger()) {
             Ok(_) => panic!("This invocation to Backend::new() should return error"),
             Err(e) => assert_eq!(e.to_string(), error_msg),
         }
     }
+}
+
+#[cfg(test)]
+pub mod backend_new {
+    use super::*;
+    use crate::tests_commons::*;
+    use helpers::*;
+    use tempdir::TempDir;
 
     #[test]
-    fn backend_new_no_backend_supplied() {
+    fn no_storage_type_supplied() {
         let matches = set_matches(vec!["this_test"]);
 
-        assert_backend_new_error(&matches, "No backend supplied.");
+        assert_backend_new_error(&matches, "No storage type supplied.");
     }
 
     #[test]
-    fn backend_new_storage_raw_dir_param_path_does_not_exist() {
+    fn given_path_does_not_exist() {
         let matches = set_matches(vec!["this_test", "--storage-raw-dir", "/dev/null/foo"]);
 
         assert_backend_new_error(&matches, "Storage Raw Dir: Path does not exist.");
     }
 
     #[test]
-    fn backend_new_storage_raw_dir_param_path_is_not_a_dir() {
+    fn given_path_is_not_a_dir() {
         let matches = set_matches(vec!["this_test", "--storage-raw-dir", "/dev/null"]);
 
         assert_backend_new_error(&matches, "Storage Raw Dir: Path is not a directory.");
     }
 
     #[test]
-    fn backend_new_storage_raw_dir_param_path_inaccessible() {
+    fn given_inaccessible() {
         let tmp_dir = TempDir::new("bls-remote-signer-test").unwrap();
         set_permissions(tmp_dir.path(), 0o40311);
 
@@ -221,38 +226,50 @@ pub mod tests {
     }
 
     #[test]
-    fn backend_new_storage_raw_dir_happy_path() {
+    fn happy_path() {
         let (_backend, _tmp_dir) = new_backend_for_get_public_keys();
     }
+}
+
+#[cfg(test)]
+pub mod backend_raw_dir_get_public_keys {
+    use crate::tests_commons::*;
+    use helpers::*;
 
     #[test]
-    fn backend_get_public_keys_raw_dir_empty_dir() {
+    fn empty_dir() {
         let (backend, _tmp_dir) = new_backend_for_get_public_keys();
 
-        assert_eq!(backend.get_public_keys().unwrap().public_keys.len(), 0);
+        assert_eq!(backend.get_public_keys().unwrap().len(), 0);
     }
 
     #[test]
-    fn backend_get_public_keys_raw_dir_some_files_are_not_public_keys() {
+    fn some_files_are_not_public_keys() {
         let (backend, tmp_dir) = new_backend_for_get_public_keys();
 
         add_sub_dirs(&tmp_dir);
         add_key_files(&tmp_dir);
         add_non_key_files(&tmp_dir);
 
-        assert_eq!(backend.get_public_keys().unwrap().public_keys.len(), 3);
+        assert_eq!(backend.get_public_keys().unwrap().len(), 3);
     }
 
     #[test]
-    fn backend_get_public_keys_raw_dir_all_files_are_public_keys() {
+    fn all_files_are_public_keys() {
         let (backend, tmp_dir) = new_backend_for_get_public_keys();
         add_key_files(&tmp_dir);
 
-        assert_eq!(backend.get_public_keys().unwrap().public_keys.len(), 3);
+        assert_eq!(backend.get_public_keys().unwrap().len(), 3);
     }
+}
+
+#[cfg(test)]
+pub mod backend_raw_dir_sign_message {
+    use crate::tests_commons::*;
+    use helpers::*;
 
     #[test]
-    fn backend_sign_raw_dir_sign_message_invalid_public_key() {
+    fn invalid_public_key() {
         let (backend, _tmp_dir) = new_backend_for_signing();
 
         let test_case = |public_key_param: &str| {
@@ -262,7 +279,7 @@ pub mod tests {
                     .sign_message(public_key_param, SIGNING_ROOT)
                     .unwrap_err()
                     .to_string(),
-                format!("Invalid public key: {}.", public_key_param)
+                format!("Invalid public key: {}", public_key_param)
             );
         };
 
@@ -272,7 +289,7 @@ pub mod tests {
     }
 
     #[test]
-    fn backend_sign_raw_dir_sign_message_invalid_signing_root() {
+    fn invalid_signing_root() {
         let (backend, _tmp_dir) = new_backend_for_signing();
 
         let test_case = |signing_root_param: &str, error_msg: &str| {
@@ -308,16 +325,16 @@ pub mod tests {
         );
         test_case(
             "0xdeadbeefzz",
-            "Invalid signing root: 0xdeadbeefzz; Invalid hex character: z at index 8.",
+            "Invalid signing root: 0xdeadbeefzz; Invalid hex character: z at index 8",
         );
         test_case(
             "0xdeadbeef1",
-            "Invalid signing root: 0xdeadbeef1; Odd length.",
+            "Invalid signing root: 0xdeadbeef1; Odd length",
         );
     }
 
     #[test]
-    fn backend_sign_raw_dir_sign_message_storage_error() {
+    fn storage_error() {
         let (backend, tmp_dir) = new_backend_for_signing();
 
         set_permissions(tmp_dir.path(), 0o40311);
@@ -330,12 +347,12 @@ pub mod tests {
 
         assert_eq!(
             result.unwrap_err().to_string(),
-            "Storage error: PermissionDenied."
+            "Storage error: PermissionDenied"
         );
     }
 
     #[test]
-    fn backend_sign_raw_dir_sign_message_key_not_found() {
+    fn key_not_found() {
         let (backend, _tmp_dir) = new_backend_for_signing();
 
         assert_eq!(
@@ -343,12 +360,12 @@ pub mod tests {
                 .sign_message(ABSENT_PUBLIC_KEY, SIGNING_ROOT)
                 .unwrap_err()
                 .to_string(),
-            format!("Key not found: {}.", ABSENT_PUBLIC_KEY)
+            format!("Key not found: {}", ABSENT_PUBLIC_KEY)
         );
     }
 
     #[test]
-    fn backend_sign_raw_dir_sign_message_key_mismatch() {
+    fn key_mismatch() {
         let (backend, _tmp_dir) = new_backend_for_signing();
 
         assert_eq!(
@@ -356,12 +373,12 @@ pub mod tests {
                 .sign_message(MISMATCHED_PUBLIC_KEY, SIGNING_ROOT)
                 .unwrap_err()
                 .to_string(),
-            format!("Key mismatch: {}.", MISMATCHED_PUBLIC_KEY)
+            format!("Key mismatch: {}", MISMATCHED_PUBLIC_KEY)
         );
     }
 
     #[test]
-    fn backend_sign_raw_dir_sign_message_happy_path() {
+    fn happy_path() {
         let (backend, _tmp_dir) = new_backend_for_signing();
 
         let test_case = |public_key: &str, signature: &str| {

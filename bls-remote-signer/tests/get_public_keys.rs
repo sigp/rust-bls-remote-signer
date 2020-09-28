@@ -1,110 +1,84 @@
-use client::api_error::ApiErrorDesc;
-use client_backend::PublicKeys;
-use helpers::*;
-use tempdir::TempDir;
+mod get_public_keys {
+    use client::api_response::PublicKeysApiResponse;
+    use helpers::*;
 
-#[test]
-fn integration_get_public_keys_all_files_in_dir_are_public_keys() {
-    let tmp_dir = TempDir::new("bls-remote-signer-test").unwrap();
-    add_key_files(&tmp_dir);
+    fn assert_ok(resp: ApiTestResponse, expected_keys_len: usize) {
+        assert_eq!(resp.status, 200);
+        assert_eq!(
+            serde_json::from_value::<PublicKeysApiResponse>(resp.json)
+                .unwrap()
+                .public_keys
+                .len(),
+            expected_keys_len
+        );
+    }
 
-    let arg_vec = vec![
-        "this_test",
-        "--port",
-        "0",
-        "--storage-raw-dir",
-        tmp_dir.path().to_str().unwrap(),
-    ];
-    let api_test = ApiTest::new(arg_vec);
+    fn assert_error(resp: ApiTestResponse, http_status: u16, error_msg: &str) {
+        assert_eq!(resp.status, http_status);
+        assert_eq!(resp.json["error"], error_msg);
+    }
 
-    let url = format!("{}/publicKeys", api_test.address);
-    let resp = ApiTest::http_get(url);
-    let resp: PublicKeys = serde_json::from_value(resp).unwrap();
+    #[test]
+    fn all_files_in_dir_are_public_keys() {
+        let (test_signer, tmp_dir) = set_up_api_test_signer_raw_dir();
+        add_key_files(&tmp_dir);
 
-    assert_eq!(resp.public_keys.len(), 3);
+        let url = format!("{}/publicKeys", test_signer.address);
 
-    api_test.shutdown();
-}
+        let resp = http_get(&url);
+        assert_ok(resp, 3);
 
-#[test]
-fn integration_get_public_keys_some_files_in_dir_are_public_keys() {
-    let tmp_dir = TempDir::new("bls-remote-signer-test").unwrap();
-    add_sub_dirs(&tmp_dir);
-    add_key_files(&tmp_dir);
-    add_non_key_files(&tmp_dir);
+        test_signer.shutdown();
+    }
 
-    let arg_vec = vec![
-        "this_test",
-        "--port",
-        "0",
-        "--storage-raw-dir",
-        tmp_dir.path().to_str().unwrap(),
-    ];
-    let api_test = ApiTest::new(arg_vec);
+    #[test]
+    fn some_files_in_dir_are_public_keys() {
+        let (test_signer, tmp_dir) = set_up_api_test_signer_raw_dir();
+        add_sub_dirs(&tmp_dir);
+        add_key_files(&tmp_dir);
+        add_non_key_files(&tmp_dir);
 
-    let url = format!("{}/publicKeys", api_test.address);
-    let resp = ApiTest::http_get(url);
-    let resp: PublicKeys = serde_json::from_value(resp).unwrap();
+        let url = format!("{}/publicKeys", test_signer.address);
 
-    assert_eq!(resp.public_keys.len(), 3);
+        let resp = http_get(&url);
+        assert_ok(resp, 3);
 
-    api_test.shutdown();
-}
+        test_signer.shutdown();
+    }
 
-#[test]
-fn integration_get_public_keys_no_files_in_dir_are_public_keys() {
-    let tmp_dir = TempDir::new("bls-remote-signer-test").unwrap();
-    add_sub_dirs(&tmp_dir);
-    add_non_key_files(&tmp_dir);
+    #[test]
+    fn no_files_in_dir_are_public_keys() {
+        let (test_signer, tmp_dir) = set_up_api_test_signer_raw_dir();
+        add_sub_dirs(&tmp_dir);
+        add_non_key_files(&tmp_dir);
 
-    let arg_vec = vec![
-        "this_test",
-        "--port",
-        "0",
-        "--storage-raw-dir",
-        tmp_dir.path().to_str().unwrap(),
-    ];
-    let api_test = ApiTest::new(arg_vec);
+        let url = format!("{}/publicKeys", test_signer.address);
 
-    let url = format!("{}/publicKeys", api_test.address);
-    let resp = ApiTest::http_get(url);
-    let resp: PublicKeys = serde_json::from_value(resp).unwrap();
+        let resp = http_get(&url);
+        assert_error(resp, 404, "No keys found in storage.");
 
-    // TODO
-    // We want to 404 on no keys
-    assert_eq!(resp.public_keys.len(), 0);
+        test_signer.shutdown();
+    }
 
-    api_test.shutdown();
-}
+    #[test]
+    fn directory_failure() {
+        let (test_signer, tmp_dir) = set_up_api_test_signer_raw_dir();
+        add_sub_dirs(&tmp_dir);
+        add_key_files(&tmp_dir);
+        add_non_key_files(&tmp_dir);
 
-#[test]
-fn integration_get_public_keys_directory_failure() {
-    let tmp_dir = TempDir::new("bls-remote-signer-test").unwrap();
-    add_sub_dirs(&tmp_dir);
-    add_key_files(&tmp_dir);
-    add_non_key_files(&tmp_dir);
+        // Somebody tripped over a wire.
+        set_permissions(tmp_dir.path(), 0o40311);
 
-    let arg_vec = vec![
-        "this_test",
-        "--port",
-        "0",
-        "--storage-raw-dir",
-        tmp_dir.path().to_str().unwrap(),
-    ];
-    let api_test = ApiTest::new(arg_vec);
+        let url = format!("{}/publicKeys", test_signer.address);
 
-    // Somebody tripped over a wire.
-    set_permissions(tmp_dir.path(), 0o40311);
+        let resp = http_get(&url);
 
-    let url = format!("{}/publicKeys", api_test.address);
-    let resp = ApiTest::http_get(url);
+        // Be able to delete the tempdir afterward, regardless of this test result.
+        set_permissions(tmp_dir.path(), 0o40755);
 
-    let resp: ApiErrorDesc = serde_json::from_value(resp).unwrap();
+        assert_error(resp, 500, "Storage error: PermissionDenied");
 
-    // Be able to delete the tempdir afterward, regardless of this test result.
-    set_permissions(tmp_dir.path(), 0o40755);
-
-    assert_eq!(resp.error, String::from("Storage error: PermissionDenied."));
-
-    api_test.shutdown();
+        test_signer.shutdown();
+    }
 }

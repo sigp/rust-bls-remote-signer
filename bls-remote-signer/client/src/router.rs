@@ -53,8 +53,6 @@ async fn route(req: Request<Body>, ctx: Arc<Context>) -> Result<Response<Body>, 
             .await?
             .serde_encodings(),
 
-        // TODO
-        // Implement dynamic routes with `warp`.
         (Method::POST, _) => route_post(&path, handler).await,
 
         _ => Err(ApiError::NotFound(
@@ -75,7 +73,7 @@ async fn route_post(path: &str, handler: Handler) -> Result<Response<Body>, ApiE
 
             if path_segments_count == 0 {
                 return Err(ApiError::BadRequest(
-                    "Parameter 'public_key' needed in route /sign/:public_key".to_string(),
+                    "Parameter public_key needed in route /sign/:public_key".to_string(),
                 ));
             }
 
@@ -86,6 +84,7 @@ async fn route_post(path: &str, handler: Handler) -> Result<Response<Body>, ApiE
             }
 
             handler
+                .allow_body()
                 .in_blocking_task(sign_message)
                 .await?
                 .serde_encodings()

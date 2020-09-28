@@ -7,7 +7,6 @@ edition = "2018"
 [dev-dependencies]
 client_backend = { path = "./backend", package = "backend"  }
 helpers = { path = "../testing/helpers", package = "helpers"  }
-tempdir = "0.3.7"
 
 [dependencies]
 clap = "2.33.0"

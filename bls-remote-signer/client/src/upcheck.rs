@@ -1,12 +1,7 @@
-use serde::Serialize;
+use crate::api_response::UpcheckApiResponse;
 
-#[derive(Serialize)]
-pub struct Upcheck {
-    status: String,
-}
-
-pub fn upcheck() -> Upcheck {
-    Upcheck {
+pub fn upcheck() -> UpcheckApiResponse {
+    UpcheckApiResponse {
         status: "OK".to_string(),
     }
 }

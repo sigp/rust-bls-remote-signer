@@ -78,12 +78,12 @@ impl Storage for StorageRawDir {
 }
 
 #[cfg(test)]
-mod tests {
-    use crate::tests::new_storage_with_tmp_dir;
+mod get_public_keys {
+    use crate::tests_commons::*;
     use helpers::*;
 
     #[test]
-    fn storage_raw_dir_problem_with_path() {
+    fn problem_with_path() {
         let (storage, tmp_dir) = new_storage_with_tmp_dir();
         add_key_files(&tmp_dir);
 
@@ -97,19 +97,19 @@ mod tests {
 
         assert_eq!(
             result.unwrap_err().to_string(),
-            "Storage error: PermissionDenied."
+            "Storage error: PermissionDenied"
         );
     }
 
     #[test]
-    fn storage_raw_dir_get_sk_no_files_in_dir() {
+    fn no_files_in_dir() {
         let (storage, _tmp_dir) = new_storage_with_tmp_dir();
 
         assert_eq!(storage.get_public_keys().unwrap().len(), 0);
     }
 
     #[test]
-    fn storage_raw_dir_get_sk_there_are_files_in_dir_none_are_keys() {
+    fn no_files_in_dir_are_public_keys() {
         let (storage, tmp_dir) = new_storage_with_tmp_dir();
         add_sub_dirs(&tmp_dir);
         add_non_key_files(&tmp_dir);
@@ -118,7 +118,7 @@ mod tests {
     }
 
     #[test]
-    fn storage_raw_dir_get_sk_not_all_files_have_public_key_names() {
+    fn not_all_files_have_public_key_names() {
         let (storage, tmp_dir) = new_storage_with_tmp_dir();
         add_sub_dirs(&tmp_dir);
         add_key_files(&tmp_dir);
@@ -128,15 +128,21 @@ mod tests {
     }
 
     #[test]
-    fn storage_raw_dir_get_sk_all_files_do_have_public_key_names() {
+    fn all_files_do_have_public_key_names() {
         let (storage, tmp_dir) = new_storage_with_tmp_dir();
         add_key_files(&tmp_dir);
 
         assert_eq!(storage.get_public_keys().unwrap().len(), 3);
     }
+}
+
+#[cfg(test)]
+mod get_secret_key {
+    use crate::tests_commons::*;
+    use helpers::*;
 
     #[test]
-    fn storage_raw_dir_get_sk_unaccessible_file() {
+    fn unaccessible_file() {
         let (storage, tmp_dir) = new_storage_with_tmp_dir();
         add_key_files(&tmp_dir);
 
@@ -150,12 +156,12 @@ mod tests {
 
         assert_eq!(
             result.unwrap_err().to_string(),
-            "Storage error: PermissionDenied."
+            "Storage error: PermissionDenied"
         );
     }
 
     #[test]
-    fn storage_raw_dir_get_sk_key_does_not_exist() {
+    fn key_does_not_exist() {
         let (storage, _tmp_dir) = new_storage_with_tmp_dir();
 
         assert_eq!(
@@ -163,12 +169,12 @@ mod tests {
                 .get_secret_key(PUBLIC_KEY_1)
                 .unwrap_err()
                 .to_string(),
-            format!("Key not found: {}.", PUBLIC_KEY_1)
+            format!("Key not found: {}", PUBLIC_KEY_1)
         );
     }
 
     #[test]
-    fn storage_raw_dir_get_sk_key_does_exist() {
+    fn happy_path() {
         let (storage, tmp_dir) = new_storage_with_tmp_dir();
         add_key_files(&tmp_dir);
 

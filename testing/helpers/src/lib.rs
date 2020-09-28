@@ -5,6 +5,8 @@ use clap::ArgMatches;
 use clap::{App, Arg};
 use client::Client;
 use environment::{Environment, EnvironmentBuilder};
+use serde_json::Value;
+use std::collections::HashMap;
 use std::fs;
 use std::fs::{create_dir, File};
 use std::io::Write;
@@ -13,12 +15,17 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use tempdir::TempDir;
 
-pub struct ApiTest {
+pub struct ApiTestSigner {
     pub address: String,
     environment: Environment,
 }
 
-impl ApiTest {
+pub struct ApiTestResponse {
+    pub status: u16,
+    pub json: Value,
+}
+
+impl ApiTestSigner {
     pub fn new(arg_vec: Vec<&str>) -> Self {
         let matches = set_matches(arg_vec);
         let mut environment = get_environment(false);
@@ -36,11 +43,6 @@ impl ApiTest {
             address,
             environment,
         }
-    }
-
-    pub fn http_get(url: String) -> serde_json::Value {
-        let text = reqwest::blocking::get(&url).unwrap().text().unwrap();
-        serde_json::from_str(&text).unwrap()
     }
 
     pub fn shutdown(mut self) {
@@ -80,6 +82,30 @@ pub fn get_environment(is_log_active: bool) -> Environment {
         .unwrap()
         .build()
         .unwrap()
+}
+
+pub fn set_up_api_test_signer_raw_dir() -> (ApiTestSigner, TempDir) {
+    let tmp_dir = TempDir::new("bls-remote-signer-test").unwrap();
+    let arg_vec = vec![
+        "this_test",
+        "--port",
+        "0",
+        "--storage-raw-dir",
+        tmp_dir.path().to_str().unwrap(),
+    ];
+    let test_signer = ApiTestSigner::new(arg_vec);
+
+    (test_signer, tmp_dir)
+}
+
+pub fn set_up_api_test_signer_to_sign_message() -> (ApiTestSigner, TempDir) {
+    let (test_signer, tmp_dir) = set_up_api_test_signer_raw_dir();
+    add_sub_dirs(&tmp_dir);
+    add_key_files(&tmp_dir);
+    add_non_key_files(&tmp_dir);
+    add_mismatched_key_file(&tmp_dir);
+
+    (test_signer, tmp_dir)
 }
 
 pub fn get_address(client: &Client) -> String {
@@ -139,4 +165,39 @@ pub fn add_sub_dirs(tmp_dir: &TempDir) {
 
     let another_sub_dir_path = tmp_dir.path().join(SUB_DIR_NAME);
     create_dir(another_sub_dir_path).unwrap();
+}
+
+pub fn http_get(url: &str) -> ApiTestResponse {
+    let response = reqwest::blocking::get(url).unwrap();
+
+    ApiTestResponse {
+        status: response.status().as_u16(),
+        json: serde_json::from_str(&response.text().unwrap()).unwrap(),
+    }
+}
+
+pub fn http_post(url: &str, hashmap: HashMap<&str, &str>) -> ApiTestResponse {
+    let response = reqwest::blocking::Client::new()
+        .post(url)
+        .json(&hashmap)
+        .send()
+        .unwrap();
+
+    ApiTestResponse {
+        status: response.status().as_u16(),
+        json: serde_json::from_str(&response.text().unwrap()).unwrap(),
+    }
+}
+
+pub fn http_post_custom_body(url: &str, body: &str) -> ApiTestResponse {
+    let response = reqwest::blocking::Client::new()
+        .post(url)
+        .body(body.to_string())
+        .send()
+        .unwrap();
+
+    ApiTestResponse {
+        status: response.status().as_u16(),
+        json: serde_json::from_str(&response.text().unwrap()).unwrap(),
+    }
 }

@@ -77,7 +77,6 @@ dependencies = [
  "lazy_static",
  "milagro_bls",
  "regex",
- "serde",
  "slog",
  "sloggers",
  "tempdir",
@@ -117,7 +116,6 @@ dependencies = [
  "helpers",
  "serde_json",
  "slog",
- "tempdir",
  "version",
 ]
 
@@ -180,6 +178,8 @@ dependencies = [
  "environment",
  "futures",
  "hyper",
+ "lazy_static",
+ "regex",
  "serde",
  "serde_json",
  "slog",
