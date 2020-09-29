@@ -104,6 +104,7 @@ pub fn set_up_api_test_signer_to_sign_message() -> (ApiTestSigner, TempDir) {
     add_key_files(&tmp_dir);
     add_non_key_files(&tmp_dir);
     add_mismatched_key_file(&tmp_dir);
+    add_invalid_secret_key_file(&tmp_dir);
 
     (test_signer, tmp_dir)
 }
@@ -137,6 +138,12 @@ pub fn add_key_files(tmp_dir: &TempDir) {
 
 pub fn add_mismatched_key_file(tmp_dir: &TempDir) {
     let pairs = vec![(MISMATCHED_PUBLIC_KEY, SECRET_KEY_1)];
+
+    add_files(tmp_dir, pairs);
+}
+
+pub fn add_invalid_secret_key_file(tmp_dir: &TempDir) {
+    let pairs = vec![(PUBLIC_KEY_FOR_INVALID_SECRET_KEY, INVALID_SECRET_KEY)];
 
     add_files(tmp_dir, pairs);
 }

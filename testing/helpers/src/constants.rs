@@ -26,6 +26,10 @@ pub const ABSENT_PUBLIC_KEY: &str = "827803e94e4b8d306735df9002465b310fabb398023
 // This is the public key of 0e5faaa97a63929cecb8597949ae148c0607f1b30bd057a7487efeb4c701fbf8.
 pub const MISMATCHED_PUBLIC_KEY: &str = "83d40dfb1cbcf2a55c139faa3feec14bdae92dd485009ac8c5670d241f71c2ce064afa48dbaf091e16d0e4356038b948";
 
+// The valid secret key is 3d703bd0dfdf2abb925b2d6bf1adf045ce8d93b8baff07e3313c5e150b043e89
+pub const PUBLIC_KEY_FOR_INVALID_SECRET_KEY: &str = "aac313c0bc04880c4e9f4b0b69a9f310b09b9325027666cc7f255f88c7f35b82a82b2aa004c9be655b5696fea67f7300";
+pub const INVALID_SECRET_KEY: &str = "WubbaLubbaDubDub";
+
 // This is the public key of 34e62afe7c4402009a46bf8af574f9d6701c2cf72b3868eeeb59dfa6e7ff6bcf.
 pub const SUB_DIR_NAME: &str = "aadbe2d5c0316dd3c9a522029f332cde578730e61d759685d7ad3bf1166c5f0bf094c3abc105384506f052e2b7a1bae0";
 

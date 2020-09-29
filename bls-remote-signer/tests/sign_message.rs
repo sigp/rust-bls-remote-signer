@@ -263,6 +263,29 @@ mod sign_message {
     }
 
     #[test]
+    fn invalid_secret_key() {
+        let (test_signer, _tmp_dir) = set_up_api_test_signer_to_sign_message();
+
+        let url = format!(
+            "{}/sign/{}",
+            test_signer.address, PUBLIC_KEY_FOR_INVALID_SECRET_KEY
+        );
+
+        let response = post(&url, SIGNING_ROOT);
+
+        assert_error(
+            response,
+            500,
+            &format!(
+                "Invalid secret key: public_key: {}; Invalid hex character: W at index 0",
+                PUBLIC_KEY_FOR_INVALID_SECRET_KEY
+            ),
+        );
+
+        test_signer.shutdown();
+    }
+
+    #[test]
     fn key_mismatch() {
         let (test_signer, _tmp_dir) = set_up_api_test_signer_to_sign_message();
 
