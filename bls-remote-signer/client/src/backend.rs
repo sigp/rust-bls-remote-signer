@@ -48,8 +48,8 @@ pub fn sign_message(
         ))),
     }?;
 
-    // The backend controls against empty signingRoot parameters, we can save us
-    // some cpu cycles, though, if we catch this earlier.
+    // The backend controls against empty signingRoot parameters.
+    // We can save us some cpu cycles, though, if we catch this earlier.
     if signing_root == "" {
         return Err(ApiError::BadRequest("Empty field signingRoot.".to_string()));
     }
