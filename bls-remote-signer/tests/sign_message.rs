@@ -174,6 +174,23 @@ mod sign_message {
             assert_error(response, 400, expected_err);
         };
 
+        testcase("{\"Marco\":\"Polo\"}", "Missing field signingRoot.");
+
+        test_signer.shutdown();
+    }
+
+    #[test]
+    fn empty_signing_root_in_json() {
+        let (test_signer, _tmp_dir) = set_up_api_test_signer_to_sign_message();
+
+        let url = format!("{}/sign/{}", test_signer.address, PUBLIC_KEY_1);
+
+        let testcase = |custom_body: &str, expected_err: &str| {
+            let response = http_post_custom_body(&url, custom_body);
+
+            assert_error(response, 400, expected_err);
+        };
+
         testcase("{\"signingRoot\":\"\"}", "Empty field signingRoot.");
 
         test_signer.shutdown();
