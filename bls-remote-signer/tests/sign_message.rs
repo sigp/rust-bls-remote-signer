@@ -6,7 +6,8 @@ mod sign_message {
     fn post(url: &str, signing_root: &str) -> ApiTestResponse {
         let mut hashmap = HashMap::new();
         hashmap.insert("signingRoot", signing_root);
-        hashmap.insert("other_field", "The signer should ignore this field.");
+        hashmap.insert("message", "The signer should ignore this field.");
+        hashmap.insert("additional_field", "The signer should ignore this field.");
 
         http_post(url, hashmap)
     }
