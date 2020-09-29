@@ -22,6 +22,7 @@ One goal of this package is to be standard compliant, that is, following an API 
 * Response
   * Returns `200` and a JSON payload containing a list of the BLS public keys available.
   * Returns `404` and an empty JSON payload if there are no keys available.
+  * Returns `500` on server errors.
 
 #### `POST /sign/:public_key`
 
