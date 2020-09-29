@@ -38,8 +38,9 @@ One goal of this package is to be standard compliant, that is, following an API 
   * Returns `404` if there is no secret key matching the given public key.
   * Returns `400` on bad requests:
     * Malformed JSON requests.
-    * Missing or onvalid field `signingRoot`.
-    * Invalid request path or `:public_key` parameter.
+    * Missing or invalid field `signingRoot`.
+    * Invalid request path.
+    * Invalid `:public_key` parameter.
   * Returns `500` on server errors:
     * Storage errors.
     * Invalid secret key retrieved.
