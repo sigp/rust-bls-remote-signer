@@ -22,7 +22,7 @@ jobs:
     - name: Certify Cargo.lock freshness
       run: git diff --exit-code Cargo.lock
   release-tests-ubuntu:
-    name: release-tests-ubuntu
+    name: tests
     runs-on: ubuntu-latest
     needs: cargo-fmt
     steps:
