@@ -1,0 +1,45 @@
+name: test-suite
+
+on: push
+jobs:
+  cargo-fmt:
+    name: cargo-fmt
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Get latest version of stable Rust
+      run: rustup update stable
+    - name: Check formatting with cargo fmt
+      run: make cargo-fmt
+  clippy:
+    name: clippy
+    runs-on: ubuntu-latest
+    needs: cargo-fmt
+    steps:
+    - uses: actions/checkout@v1
+    - name: Lint code for quality and style with Clippy
+      run: make lint
+    - name: Certify Cargo.lock freshness
+      run: git diff --exit-code Cargo.lock
+  release-tests-ubuntu:
+    name: release-tests-ubuntu
+    runs-on: ubuntu-latest
+    needs: cargo-fmt
+    steps:
+    - uses: actions/checkout@v1
+    - name: Get latest version of stable Rust
+      run: rustup update stable
+    - name: Run tests in debug and release
+      run: make test
+  cargo-udeps:
+    name: cargo-udeps
+    runs-on: ubuntu-latest
+    needs: cargo-fmt
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install a nightly compiler with rustfmt, as a kind of quality control
+      run: rustup toolchain install --component=rustfmt nightly
+    - name: Install cargo-udeps
+      run: cargo install cargo-udeps --locked
+    - name: Run cargo udeps to identify unused crates in the dependency graph
+      run: make udeps

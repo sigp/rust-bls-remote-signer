@@ -10,3 +10,6 @@ signer:
 test:
 	cargo test --all
 	cargo test --all --release
+
+udeps:
+	cargo +nightly udeps --tests --all-targets --release
