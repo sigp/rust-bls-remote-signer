@@ -113,11 +113,13 @@ This API specification contains only three methods: one for **status**, one for 
 
 The following subsections discuss aspects to be considered by the client implementers relative to these subjects.
 
+#### Implementation of additional features
+
+From an API pipeline view, we have two nodes: The validator client (1) that makes requests to the remote signer (2). A more sophisticated chain can be built by introducing elements between these two nodes. Either by setting up reverse proxy services, or by adding plugins to the remote signer implementation.
+
 #### Authentication
 
-Can be accomplished by either prepending to the API, or adding a middleware to the client implementation the validation of an HTTP Request Header.
-
-There are several ways to negotiate and issue a valid token to authenticate the communication between the validator client and the remote signer, each of them with potential drawbacks (e.g replay attacks, challenges in distributing the token to the validator client, etc.). In general, any method of authentication must be combined with transport encryption to be effective.
+Can be accomplished through the use of an HTTP Request Header. There are several ways to negotiate and issue a valid token to authenticate the communication between the validator client and the remote signer, each of them with potential drawbacks (e.g replay attacks, challenges in distributing the token to the validator client, etc.). In general, any method of authentication must be combined with transport encryption to be effective.
 
 The operator can also implement network Access Control Lists (ACLs) between the validator client's network and the remote signer's network, reducing the attack surface by requiring a potential attacker to be positioned in the same network as the validator client.
 
@@ -125,7 +127,7 @@ The operator can also implement network Access Control Lists (ACLs) between the 
 
 A key feature for a remote signer, pre-image validation implies that not only the `signingRoot`, but all the required elements needed to perform complete validation of the message, are sent through the wire to obtain a signature.
 
-This can be accomplished by either prepending to the API, or adding a middleware to the client implementation a control that parses the message. There is no breaking of this document API specification, as any other field different from `signingRoot` will be ignored by the remote signer.
+A control that parses this pre-image will not be breaking this document API specification, as any other field different from `signingRoot` will be ignored by the remote signer.
 
 Implementers should address the additional requirements emerging for each specific validation, such as, slashing protection, as this entails the needs to manage a database and the mechanisms to update it. Also new threats need to be addressed and controlled, among them, attackers looking into tampering the source of data.
 
@@ -136,8 +138,6 @@ There are several ways to store secret keys, namely Hardware Security Modules (H
 Is in this perspective that any procedure to create, update, or delete keys should be worked apart from the client implementation.
 
 #### Transport Encryption
-
-This feature can be accomplished by either prepending to the API, or adding a middleware to the client implementation.
 
 If the operator is working with self-signed certificates, it is required that the client enhancement consuming the remote signer allows this option.
 
