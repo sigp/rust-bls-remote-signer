@@ -5,12 +5,12 @@ authors = ["Paul Hauner <paul@paulhauner.com>"]
 edition = "2018"
 
 [dependencies]
-ctrlc = { version = "3.1.4", features = ["termination"] }
+ctrlc = { version = "3.1.6", features = ["termination"] }
 exit-future = "0.2.0"
 futures = "0.3.5"
 slog = { version = "2.5.2", features = ["max_level_trace"] }
 slog-async = "2.5.0"
 slog-json = "2.3.0"
-slog-term = "2.5.0"
-tokio = { version = "0.2.21", features = ["macros", "rt-threaded"] }
-sloggers = "1.0.0"
+slog-term = "2.6.0"
+tokio = { version = "0.2.22", features = ["macros", "rt-threaded"] }
+sloggers = "1.0.1"

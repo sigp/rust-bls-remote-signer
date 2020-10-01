@@ -6,11 +6,11 @@ edition = "2018"
 
 [dev-dependencies]
 helpers = { path = "../../testing/helpers", package = "helpers"  }
-sloggers = "1.0.0"
+sloggers = "1.0.1"
 tempdir = "0.3.7"
 
 [dependencies]
-clap = "2.33.0"
+clap = "2.33.3"
 lazy_static = "1.4.0"
 milagro_bls = { git = "https://github.com/sigp/milagro_bls", branch = "paulh" }
 regex = "1.3.9"
