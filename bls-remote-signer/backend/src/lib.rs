@@ -9,7 +9,7 @@ use lazy_static::lazy_static;
 use milagro_bls::{PublicKey, SecretKey, Signature};
 use regex::Regex;
 use slog::{info, Logger};
-use storage::Storage;
+pub use storage::Storage;
 use storage_raw_dir::StorageRawDir;
 use utils::{bytes96_to_hex_string, hex_string_to_bytes};
 
@@ -21,18 +21,18 @@ lazy_static! {
 ///
 /// Designed to support several types of storages.
 #[derive(Clone)]
-pub struct Backend {
-    storage: Box<dyn Storage>,
+pub struct Backend<T> {
+    storage: T,
 }
 
-impl Backend {
+impl Backend<StorageRawDir> {
     /// Creates a Backend with the given storage type at the CLI arguments.
     ///
     /// # Storage types supported
     ///
     /// * Raw files in directory: `--storage-raw-dir <DIR>`
     ///
-    pub fn new(cli_args: &ArgMatches<'_>, log: &Logger) -> Result<Backend, String> {
+    pub fn new(cli_args: &ArgMatches<'_>, log: &Logger) -> Result<Self, String> {
         // Storage types are mutually exclusive.
         if let Some(path) = cli_args.value_of("storage-raw-dir") {
             info!(
@@ -43,15 +43,15 @@ impl Backend {
             );
 
             StorageRawDir::new(path)
-                .map(|storage| Backend {
-                    storage: Box::new(storage),
-                })
+                .map(|storage| Self { storage })
                 .map_err(|e| format!("Storage Raw Dir: {}", e))
         } else {
             Err("No storage type supplied.".to_string())
         }
     }
+}
 
+impl<T: Storage> Backend<T> {
     /// Returns the available public keys in storage.
     pub fn get_public_keys(self) -> Result<Vec<String>, BackendError> {
         self.storage.get_public_keys()
@@ -83,7 +83,7 @@ impl Backend {
         // * We want to have only one copy of this value in memory during this scope.
         // * We want to zeroize the used memory once this value is dropped.
         let secret_key: String = self.storage.get_secret_key(public_key)?;
-        let secret_key: SecretKey = Backend::validate_bls_pair(public_key, &secret_key)?;
+        let secret_key: SecretKey = Self::validate_bls_pair(public_key, &secret_key)?;
 
         let signature = Signature::new(&signing_root, &secret_key);
 
@@ -120,15 +120,18 @@ impl Backend {
 #[cfg(test)]
 pub mod tests_commons {
     use super::*;
+    pub use crate::Storage;
     use helpers::*;
     use sloggers::{null::NullLoggerBuilder, Build};
     use tempdir::TempDir;
 
-    pub fn new_storage_with_tmp_dir() -> (Box<dyn Storage>, TempDir) {
+    type T = StorageRawDir;
+
+    pub fn new_storage_with_tmp_dir() -> (T, TempDir) {
         let tmp_dir = TempDir::new("bls-remote-signer-test").unwrap();
         let storage = StorageRawDir::new(tmp_dir.path().to_str().unwrap()).unwrap();
         // The methods defined in the trait are available for this arbitraty self type.
-        (Box::new(storage), tmp_dir)
+        (storage, tmp_dir)
     }
 
     pub fn get_null_logger() -> Logger {
@@ -136,7 +139,7 @@ pub mod tests_commons {
         log_builder.build().unwrap()
     }
 
-    pub fn new_backend_for_get_public_keys() -> (Backend, TempDir) {
+    pub fn new_backend_for_get_public_keys() -> (Backend<T>, TempDir) {
         let tmp_dir = TempDir::new("bls-remote-signer-test").unwrap();
 
         let matches = set_matches(vec![
@@ -153,7 +156,7 @@ pub mod tests_commons {
         (backend, tmp_dir)
     }
 
-    pub fn new_backend_for_signing() -> (Backend, TempDir) {
+    pub fn new_backend_for_signing() -> (Backend<T>, TempDir) {
         let (backend, tmp_dir) = new_backend_for_get_public_keys();
 
         // This one has the whole fauna.

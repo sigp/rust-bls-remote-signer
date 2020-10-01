@@ -34,8 +34,8 @@ impl StorageRawDir {
 impl Storage for StorageRawDir {
     /// List all the files in the directory having a BLS public key name.
     /// This function DOES NOT check the contents of each file.
-    fn get_public_keys(self: Box<Self>) -> Result<Vec<String>, BackendError> {
-        let entries = read_dir(self.path).map_err(BackendError::from)?;
+    fn get_public_keys(&self) -> Result<Vec<String>, BackendError> {
+        let entries = read_dir(&self.path).map_err(BackendError::from)?;
 
         // We are silently suppressing errors in this chain
         // because we only care about files actually passing these filters.
@@ -52,7 +52,7 @@ impl Storage for StorageRawDir {
 
     /// Gets a requested secret key by their reference, its public key.
     /// This function DOES NOT check the contents of the retrieved file.
-    fn get_secret_key(self: Box<Self>, input: &str) -> Result<String, BackendError> {
+    fn get_secret_key(&self, input: &str) -> Result<String, BackendError> {
         let file = File::open(self.path.join(input)).map_err(|e| match e.kind() {
             std::io::ErrorKind::NotFound => BackendError::KeyNotFound(input.to_string()),
             _ => e.into(),
@@ -69,11 +69,6 @@ impl Storage for StorageRawDir {
 
         // Moving the value to the caller.
         Ok(secret_key)
-    }
-
-    /// Needed for the Backend struct to implement Clone
-    fn box_clone(&self) -> Box<dyn Storage> {
-        Box::new(self.clone())
     }
 }
 

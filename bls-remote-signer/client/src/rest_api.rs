@@ -1,5 +1,5 @@
 use crate::config::Config;
-use client_backend::Backend;
+use client_backend::{Backend, Storage};
 use environment::TaskExecutor;
 use futures::future::TryFutureExt;
 use hyper::server::conn::AddrStream;
@@ -9,17 +9,17 @@ use slog::{info, warn};
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-pub struct Context {
+pub struct Context<T: Send + Sync> {
     pub config: Config,
     pub executor: TaskExecutor,
     pub log: slog::Logger,
-    pub backend: Backend,
+    pub backend: Backend<T>,
 }
 
-pub fn start_server(
+pub fn start_server<T: 'static + Storage>(
     executor: TaskExecutor,
     config: Config,
-    backend: Backend,
+    backend: Backend<T>,
 ) -> Result<SocketAddr, hyper::Error> {
     let log = executor.log();
 

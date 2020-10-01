@@ -5,16 +5,16 @@ use serde::Serialize;
 use std::sync::Arc;
 
 /// Provides a HTTP request handler with specific functionality.
-pub struct Handler {
+pub struct Handler<T: Send + Sync> {
     req: Request<()>,
     body: Body,
-    ctx: Arc<Context>,
+    ctx: Arc<Context<T>>,
     allow_body: bool,
 }
 // <T: Clone + Send + Sync + 'static>
-impl Handler {
+impl<T: 'static + Send + Sync> Handler<T> {
     /// Start handling a new request.
-    pub fn new(req: Request<Body>, ctx: Arc<Context>) -> Result<Self, ApiError> {
+    pub fn new(req: Request<Body>, ctx: Arc<Context<T>>) -> Result<Self, ApiError> {
         let (req_parts, body) = req.into_parts();
         let req = Request::from_parts(req_parts, ());
 
@@ -49,7 +49,7 @@ impl Handler {
     pub async fn in_blocking_task<F, V>(self, func: F) -> Result<HandledRequest<V>, ApiError>
     where
         V: Send + Sync + 'static,
-        F: Fn(Request<Vec<u8>>, Arc<Context>) -> Result<V, ApiError> + Send + Sync + 'static,
+        F: Fn(Request<Vec<u8>>, Arc<Context<T>>) -> Result<V, ApiError> + Send + Sync + 'static,
     {
         let ctx = self.ctx;
         let executor = ctx.executor.clone();

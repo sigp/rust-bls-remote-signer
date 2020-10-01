@@ -1,7 +1,7 @@
 use crate::api_error::ApiError;
 use crate::api_response::{PublicKeysApiResponse, SignatureApiResponse};
 use crate::rest_api::Context;
-use client_backend::BackendError;
+use client_backend::{BackendError, Storage};
 use hyper::Request;
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -13,7 +13,10 @@ lazy_static! {
 }
 
 /// HTTP handler to get the list of public keys in the backend.
-pub fn get_public_keys<T>(_: T, ctx: Arc<Context>) -> Result<PublicKeysApiResponse, ApiError> {
+pub fn get_public_keys<T: Storage, U>(
+    _: U,
+    ctx: Arc<Context<T>>,
+) -> Result<PublicKeysApiResponse, ApiError> {
     let public_keys = ctx
         .backend
         .clone()
@@ -28,9 +31,9 @@ pub fn get_public_keys<T>(_: T, ctx: Arc<Context>) -> Result<PublicKeysApiRespon
 }
 
 /// HTTP handler to sign a message with the requested key.
-pub fn sign_message(
+pub fn sign_message<T: Storage>(
     req: Request<Vec<u8>>,
-    ctx: Arc<Context>,
+    ctx: Arc<Context<T>>,
 ) -> Result<SignatureApiResponse, ApiError> {
     let body: Value = serde_json::from_slice(req.body())
         .map_err(|e| ApiError::BadRequest(format!("Unable to parse JSON: {:?}", e)))?;

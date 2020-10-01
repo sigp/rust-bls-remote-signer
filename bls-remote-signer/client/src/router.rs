@@ -3,14 +3,15 @@ use crate::backend::{get_public_keys, sign_message};
 use crate::handler::Handler;
 use crate::rest_api::Context;
 use crate::upcheck::upcheck;
+use client_backend::Storage;
 use hyper::{Body, Method, Request, Response};
 use slog::debug;
 use std::sync::Arc;
 use std::time::Instant;
 
-pub async fn on_http_request(
+pub async fn on_http_request<T: 'static + Storage>(
     req: Request<Body>,
-    ctx: Arc<Context>,
+    ctx: Arc<Context<T>>,
 ) -> Result<Response<Body>, ApiError> {
     let path = req.uri().path().to_string();
     let received_instant = Instant::now();
@@ -39,7 +40,10 @@ pub async fn on_http_request(
     }
 }
 
-async fn route(req: Request<Body>, ctx: Arc<Context>) -> Result<Response<Body>, ApiError> {
+async fn route<T: 'static + Storage>(
+    req: Request<Body>,
+    ctx: Arc<Context<T>>,
+) -> Result<Response<Body>, ApiError> {
     let path = req.uri().path().to_string();
     let method = req.method().clone();
     let ctx = ctx.clone();
@@ -64,7 +68,10 @@ async fn route(req: Request<Body>, ctx: Arc<Context>) -> Result<Response<Body>, 
 /// Responds to all the POST requests.
 ///
 /// Should be deprecated once a better routing library is used, such as `warp`
-async fn route_post(path: &str, handler: Handler) -> Result<Response<Body>, ApiError> {
+async fn route_post<T: 'static + Storage>(
+    path: &str,
+    handler: Handler<T>,
+) -> Result<Response<Body>, ApiError> {
     let mut path_segments = path[1..].trim_end_matches('/').split('/');
 
     match path_segments.next() {
