@@ -104,14 +104,9 @@ impl<T: Storage> Backend<T> {
         let pk_param_as_bytes = hex_string_to_bytes(&public_key)
             .map_err(|e| BackendError::InvalidPublicKey(format!("{}; {}", public_key, e)))?;
 
-        if !PublicKey::from_secret_key(&secret_key)
-            .as_bytes()
-            .iter()
-            .zip(pk_param_as_bytes.iter())
-            .all(|(a, b)| a == b)
-        {
+        if &PublicKey::from_secret_key(&secret_key).as_bytes()[..] != pk_param_as_bytes {
             return Err(BackendError::KeyMismatch(public_key.to_string()));
-        };
+        }
 
         Ok(secret_key)
     }
