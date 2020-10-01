@@ -26,7 +26,7 @@ impl StorageRawDir {
             return Err("Path is not a directory.".to_string());
         }
 
-        read_dir(path.clone()).map_err(|e| format!("{:?}", e.kind()))?;
+        read_dir(path).map_err(|e| format!("{:?}", e.kind()))?;
 
         Ok(Self {
             path: path.to_path_buf(),
