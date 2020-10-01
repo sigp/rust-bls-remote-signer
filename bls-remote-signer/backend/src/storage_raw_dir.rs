@@ -3,6 +3,7 @@ use std::fs::read_dir;
 use std::fs::File;
 use std::io::prelude::Read;
 use std::io::BufReader;
+use std::path::Path;
 use std::path::PathBuf;
 
 #[derive(Clone)]
@@ -14,8 +15,8 @@ impl StorageRawDir {
     /// Initializes the storage with the given path, verifying
     /// whether it is a directory and if its available to the user.
     /// Does not list, nor verify the contents of the directory.
-    pub fn new(path: &str) -> Result<Self, String> {
-        let path = PathBuf::from(path);
+    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self, String> {
+        let path = path.as_ref();
 
         if !path.exists() {
             return Err("Path does not exist.".to_string());
@@ -27,7 +28,9 @@ impl StorageRawDir {
 
         read_dir(path.clone()).map_err(|e| format!("{:?}", e.kind()))?;
 
-        Ok(Self { path })
+        Ok(Self {
+            path: path.to_path_buf(),
+        })
     }
 }
 
