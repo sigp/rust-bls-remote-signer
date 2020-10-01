@@ -58,9 +58,9 @@ impl<T: Storage> Backend<T> {
     }
 
     /// Signs the message with the requested key in storage.
-    /// The unix way, inputs and outputs are strings.
+    /// The unix way: Inputs and outputs are strings.
     pub fn sign_message(
-        self,
+        &self,
         public_key: &str,
         signing_root: &str,
     ) -> Result<String, BackendError> {

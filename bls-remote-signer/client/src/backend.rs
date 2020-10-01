@@ -70,7 +70,7 @@ pub fn sign_message<T: Storage>(
         ApiError::BadRequest(format!("Unable to get public key from path: {:?}", path))
     })?;
 
-    match ctx.backend.clone().sign_message(&public_key, &signing_root) {
+    match ctx.backend.sign_message(&public_key, &signing_root) {
         Ok(signature) => Ok(SignatureApiResponse { signature }),
 
         Err(BackendError::KeyNotFound(_)) => {
