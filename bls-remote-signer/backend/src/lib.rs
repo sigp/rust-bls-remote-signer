@@ -68,7 +68,7 @@ impl<T: Storage> Backend<T> {
             return Err(BackendError::InvalidPublicKey(public_key.to_string()));
         }
 
-        if signing_root.len() < 4 || &signing_root[0..2] != "0x" {
+        if signing_root.len() < 4 || !signing_root.starts_with("0x") {
             return Err(BackendError::InvalidSigningRoot(format!(
                 "{}; Value should be a non-empty hexadecimal starting with 0x.",
                 signing_root
