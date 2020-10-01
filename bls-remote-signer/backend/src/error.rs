@@ -1,12 +1,12 @@
 #[derive(Debug)]
 pub enum BackendError {
-    /// Parameter signingRoot is not an hex representation.
+    /// Parameter signingRoot is not a hexadecimal representation.
     InvalidSigningRoot(String),
 
-    /// Parameter is not an hex representation of a BLS public key.
+    /// Parameter is not a hexadecimal representation of a BLS public key.
     InvalidPublicKey(String),
 
-    /// Retrieved value is not an hex representation of a BLS secret key.
+    /// Retrieved value is not a hexadecimal representation of a BLS secret key.
     InvalidSecretKey(String),
 
     /// Public and Secret key won't match.

@@ -33,7 +33,7 @@ One goal of this package is to be standard compliant, that is, following an API 
       * To allow for the installing of filter enhancements and/or plugins.
 
 * Response
-  * Returns `200` and a JSON containing the `signature` field, as a string representation of an hexadecimal value.
+  * Returns `200` and a JSON containing the `signature` field, as a string representation of a hexadecimal value.
   * Returns `404` if there is no secret key matching the given public key.
   * Returns `400` on bad requests:
     * Malformed JSON requests.
