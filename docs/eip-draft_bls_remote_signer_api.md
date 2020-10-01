@@ -63,13 +63,6 @@ Error | <br>
 Code | `404`
 Content | `{"error": "No keys found in storage."}`
 
-_or_
-
-Error | <br>
---- | ---
-Code |  `500`
-Content|  `{"error": "<Server Error Message>"}`
-
 ---
 
 ### `POST /sign/:public_key`
@@ -105,13 +98,6 @@ Error | <br>
 --- | ---
 Code |  `404`
 Content | `{"error": "Key not found: <public_key_hex_string_without_0x>"}`
-
-_or_
-
-Error | <br>
---- | ---
-Code |  `500`
-Content | `{"error": "<Server Error Message>"}`
 
 ---
 
