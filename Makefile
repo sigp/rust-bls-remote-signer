@@ -1,4 +1,10 @@
-# Performs a `cargo` clean and cleans the `ef_tests` directory.
+# Builds the Remote Signer binary in release (optimized).
+#
+# Binaries will most likely be found in `./target/release`
+install:
+	cargo build --release --manifest-path bls-remote-signer/Cargo.toml
+
+# Performs a `cargo` clean.
 clean:
 	cargo clean
 
@@ -9,10 +15,6 @@ cargo-fmt:
 # Lints the code.
 lint:
 	cargo clippy --all
-
-# Builds a binary in target/release.
-signer:
-	cargo build --release --manifest-path bls-remote-signer/Cargo.toml
 
 # Runs test for both debug and release.
 test:

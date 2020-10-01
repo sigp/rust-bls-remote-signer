@@ -48,8 +48,9 @@ One goal of this package is to be standard compliant, that is, following an API 
 
 ## Build instructions
 
-1. [Get Rust](https://www.rust-lang.org/learn/get-started)
-2. `make signer`
+1. [Get Rust](https://www.rust-lang.org/learn/get-started).
+2. Execute `make`.
+3. The binary `bls-remote-signer` will most likely be found in `./target/release`.
 
 ### Testing
 
