@@ -1,4 +1,6 @@
 use hyper::{Body, Response, StatusCode};
+use serde::{Deserialize, Serialize};
+use serde_json::to_string;
 use std::error::Error as StdError;
 
 #[derive(PartialEq, Debug, Clone)]
@@ -7,6 +9,11 @@ pub enum ApiError {
     NotImplemented(String),
     BadRequest(String),
     NotFound(String),
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct ApiErrorDesc {
+    pub error: String,
 }
 
 pub type ApiResult = Result<Response<Body>, ApiError>;
@@ -25,23 +32,14 @@ impl ApiError {
 impl Into<Response<Body>> for ApiError {
     fn into(self) -> Response<Body> {
         let (status_code, desc) = self.status_code();
+
+        let json_desc = to_string(&ApiErrorDesc { error: desc })
+            .expect("The struct ApiErrorDesc should always serialize.");
+
         Response::builder()
             .status(status_code)
-            .header("content-type", "text/plain; charset=utf-8")
-            .body(Body::from(desc))
+            .body(Body::from(json_desc))
             .expect("Response should always be created.")
-    }
-}
-
-impl From<hyper::error::Error> for ApiError {
-    fn from(e: hyper::error::Error) -> ApiError {
-        ApiError::ServerError(format!("Networking error: {:?}", e))
-    }
-}
-
-impl From<std::io::Error> for ApiError {
-    fn from(e: std::io::Error) -> ApiError {
-        ApiError::ServerError(format!("IO error: {:?}", e))
     }
 }
 

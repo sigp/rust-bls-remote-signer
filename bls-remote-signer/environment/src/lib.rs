@@ -13,6 +13,7 @@ use futures::channel::{
 };
 use futures::{future, StreamExt};
 use slog::{info, o, Drain, Level, Logger};
+use sloggers::{null::NullLoggerBuilder, Build};
 use std::cell::RefCell;
 use std::ffi::OsStr;
 use std::fs::{rename as FsRename, OpenOptions};
@@ -39,6 +40,18 @@ impl EnvironmentBuilder {
         Self {
             runtime: None,
             log: None,
+        }
+    }
+
+    /// Specifies that all logs should be sent to `null` (i.e., ignored).
+    pub fn null_logger(mut self) -> Result<Self, String> {
+        let log_builder = NullLoggerBuilder;
+        match log_builder.build() {
+            Ok(null_logger) => {
+                self.log = Some(null_logger);
+                Ok(self)
+            }
+            Err(e) => Err(format!("Failed to start null logger: {:?}", e)),
         }
     }
 
@@ -245,7 +258,7 @@ impl Environment {
         let ctrlc_send_c = RefCell::new(Some(ctrlc_send));
         ctrlc::set_handler(move || {
             if let Some(ctrlc_send) = ctrlc_send_c.try_borrow_mut().unwrap().take() {
-                ctrlc_send.send(()).expect("Error sending ctrl-c message");
+                ctrlc_send.send(()).expect("Error sending ctrl-c message.");
             }
         })
         .map_err(|e| format!("Could not set ctrlc handler: {:?}", e))?;

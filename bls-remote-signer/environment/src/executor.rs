@@ -19,7 +19,6 @@ pub struct TaskExecutor {
 }
 
 impl TaskExecutor {
-    // PLACEHOLDER
     pub fn spawn_without_exit(
         &self,
         task: impl Future<Output = ()> + Send + 'static,
