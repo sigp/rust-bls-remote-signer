@@ -11,7 +11,7 @@ pub struct Handler<T: Send + Sync> {
     ctx: Arc<Context<T>>,
     allow_body: bool,
 }
-// <T: Clone + Send + Sync + 'static>
+
 impl<T: 'static + Send + Sync> Handler<T> {
     /// Start handling a new request.
     pub fn new(req: Request<Body>, ctx: Arc<Context<T>>) -> Result<Self, ApiError> {

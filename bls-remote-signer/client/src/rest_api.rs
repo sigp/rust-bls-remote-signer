@@ -16,7 +16,7 @@ pub struct Context<T: Send + Sync> {
     pub backend: Backend<T>,
 }
 
-pub fn start_server<T: 'static + Storage>(
+pub fn start_server<T: Storage>(
     executor: TaskExecutor,
     config: Config,
     backend: Backend<T>,

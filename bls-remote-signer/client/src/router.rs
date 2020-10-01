@@ -9,7 +9,7 @@ use slog::debug;
 use std::sync::Arc;
 use std::time::Instant;
 
-pub async fn on_http_request<T: 'static + Storage>(
+pub async fn on_http_request<T: Storage>(
     req: Request<Body>,
     ctx: Arc<Context<T>>,
 ) -> Result<Response<Body>, ApiError> {
@@ -40,7 +40,7 @@ pub async fn on_http_request<T: 'static + Storage>(
     }
 }
 
-async fn route<T: 'static + Storage>(
+async fn route<T: Storage>(
     req: Request<Body>,
     ctx: Arc<Context<T>>,
 ) -> Result<Response<Body>, ApiError> {
@@ -68,7 +68,7 @@ async fn route<T: 'static + Storage>(
 /// Responds to all the POST requests.
 ///
 /// Should be deprecated once a better routing library is used, such as `warp`
-async fn route_post<T: 'static + Storage>(
+async fn route_post<T: Storage>(
     path: &str,
     handler: Handler<T>,
 ) -> Result<Response<Body>, ApiError> {

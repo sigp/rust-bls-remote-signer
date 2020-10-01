@@ -1,7 +1,7 @@
 use crate::BackendError;
 
 /// The storage medium for the secret keys used by a `Backend`.
-pub trait Storage: Clone + Send + Sync {
+pub trait Storage: 'static + Clone + Send + Sync {
     /// Queries storage for the available keys to sign.
     fn get_public_keys(&self) -> Result<Vec<String>, BackendError>;
 
