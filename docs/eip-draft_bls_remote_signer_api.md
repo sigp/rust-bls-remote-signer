@@ -398,7 +398,7 @@ An attacker can disclose the contents of a private key by retrieving the key fro
 An attacker can eavesdrop on the uploading of a secret key. | Upload the keys using a secure channel, based on each storage specification.
 An attacker can eavesdrop on the retrieval of a key from the remote signer. | Always pass the data between storage and remote signer node using a secure channel.
 An attacker can dump the memory in the remote signer to disclose a secret key. |  Prevent physical access to the node running the remote signer.<br>_or_<br>Prevent access to the terminal of the node runnig the remote signer: Logs being sent to a syslog box. Deployments triggered by a simple, non-parameterized API.<br>_or_<br>Implement zeroization of the secret key at memory.<br>_or_<br>Explore the compilation and running of the remote signer in a Trusted execution environment (TEE).
-An attacker can DoS the remote signer. | Mitigation left to the implementer.
+An attacker can DoS the remote signer. | Implement IP filtering.<br>_or_<br>Implement Rate limiting.
 
 ## Copyright
 Copyright and related rights waived via [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
