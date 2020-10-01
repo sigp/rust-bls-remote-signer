@@ -1,6 +1,6 @@
 ---
 eip: <to be assigned>
-title: BLS remote signer HTTP API standard.
+title: BLS Remote Signer HTTP API Standard
 author: Herman Junge <herman@sigmaprime.io>
 discussions-to: <URL>
 status: Draft
@@ -10,29 +10,29 @@ created: 2020-09-30
 ---
 
 ## Simple Summary
-This EIP defines the HTTP API standard of the BLS remote signer, consumed by validator clients to sign proposals and attestations of blocks.
+This EIP defines a HTTP API standard for a BLS remote signer, consumed by validator clients to sign block proposals and attestations in the context of Ethereum 2.0 (eth2).
 
 ## Abstract
-A validator client contributes to the consensus of the blockchain by signing proposals and attestations of blocks, using a BLS secret key which must be available to this client.
+A [validator](https://github.com/ethereum/eth2.0-specs/blob/dev/specs/phase0/validator.md) client contributes to the consensus of the Eth2 blockchain by signing proposals and attestations of blocks, using a BLS private key which must be available to this client at all times.
 
-The BLS remote signer API is designed to be consumed by validator clients, looking for a more secure avenue to store their BLS12-381 secret keys, enabling them to run in more permissive and scalable environments.
+The BLS remote signer API is designed to be consumed by validator clients, looking for a more secure avenue to store their BLS12-381 private key(s), enabling them to run in more permissive and scalable environments.
 
 ## Motivation
-Ethereum 2.0 utilizes BLS12-381 signatures.
+Eth2 utilizes [BLS12-381](https://github.com/cfrg/draft-irtf-cfrg-bls-signature/) signatures.
 
-Consensus in the blockchain is created by the proposal and attestation of blocks from the validator clients, using a BLS secret key which must be available each time a signature is made: That is, at least once every epoch (6.4 minutes), during a small window of time within this epoch, given by the duty of the validator at random.
+Consensus on the eth2 Blockchain is achieved via the proposal and attestation of blocks from validator clients, using a BLS private key (_signing_ key) which must be available each time a message is signed: that is, at least once every epoch (6.4 minutes), during a small window of time within this epoch (a _slot_, i.e. 12 seconds), as each validator is expected to attest exactly once per epoch.
 
-While there is not a directive on the Ethereum 2.0 specification on where this BLS secret key should be, leaving this detail to the client implementer, it is inferred that such assets must be in the same node where the validator client is executed.
+The [eth2 specification](https://github.com/ethereum/eth2.0-specs) does not explicitly provide a directive on where this BLS private key must/should be stored, leaving this implementation detail to the client teams, who assume that this cryptographic secret is stored on the same host as the validator client.
 
-This assumption must be sufficient in the use case where the validator client is run in a physically secure network (i.e. nobody, but the operator, has a chance to log-in into the node), as such configuration would only allow _outbound_ calls from the validator client. In this situation, only a physical break-in will allow an attacker to either have arbitrary access to the storage or to the memory of the device.
+This assumption is sufficient in the use case where the validator client is running in a physically secure network (i.e. nobody, but the operator, has a chance to log-in into the machine hosting the validator client), as such configuration would only allow _outbound_ calls from the validator client. In this situation, only a physical security breach can allow an attacker to either have arbitrary access to the storage or to the memory of the device.
 
-There are, however, use cases where it is required by the operator to run a validator node in less strict security constraints, as the ones given by a cloud provider. Notwithstanding any security expectation, nothing prevents a rogue operator from gaining arbitrary access to the assets running inside a node.
+There are, however, use cases where it is required by the operator to run a validator client node in less constrained security environments, as the ones given by a cloud provider. Notwithstanding any security expectation, nothing prevents a rogue operator from gaining arbitrary access to the assets running inside a node.
 
-The situation is not better when the requirement is to execute the validators by leveraging a container orchestration solution. The handling of secret keys across nodes can become a burden both from an operational as well as a security perspective.
+The situation is not better when the requirement is to execute the validators by leveraging a container orchestration solution (e.g. Kubernetes). The handling of secret keys across nodes can become a burden both from an operational as well as a security perspective.
 
-The proposed solution comprises running a specialized node with exclusive access to the secret keys, listening to a simple API (to be defined at the [Specification](#specification) section), and returning the requested signatures. Operators working under this schema must utilize clients with the adequate enhancement supporting the consumption of this API.
+The proposed solution comprises running a specialized node with exclusive access to the secret keys, listening to a simple API (defined in the [Specification](#specification) section), and returning the requested signatures. Operators working under this schema must utilize clients with the adequate feature supporting the consumption of this API.
 
-The focus of this specification is the supply of BLS signatures on demand. The aspects of authentication, key management (creation, update, and deletion), pre-image validation, and transport encryption are discussed in the [Rationale](#rationale) of this document. Moreover, there is further recognition of these matters at the threat model at the [Security](#security-considerations) section.
+The focus of this specification is the supply of BLS signatures _on demand_. The aspects of authentication, key management (creation, update, and deletion), pre-image validation, and transport encryption are discussed in the [Rationale](#rationale) section of this document. Moreover, the [Thread Model](#threat-model) section of this document provides a (non-exhaustive) list of threats and attack vectors, along with the suggested related mitigation strategy.
 
 ## Specification
 
@@ -121,35 +121,35 @@ Content | `{"error": "<Server Error Message>"}`
 
 By relaxing the constraint of using an hexadecimal, clients can opt-in to using custom ids for their private keys, and perform the adequate retrieving and matching with the secret key within the signer. This is, in the measure the remote signer implementer allows for this feature.
 
-### Unix philosophy: Simple API
+### UNIX philosophy: Simple API
 
-This API specification contains only three methods: One for **status**, one for **listing the available keys**, and one to **perform a signature**. There are no methods for authentication, pre-image validation, key management, nor encryption in-transit.
+This API specification contains only three methods: one for **status**, one for **listing the available keys**, and one to **produce a signature**. There are no methods for authentication, pre-image validation, key management, nor transport encryption.
 
-The following subsections discuss aspects to being considered by the client implementers relative to these subjects.
+The following subsections discuss aspects to be considered by the client implementers relative to these subjects.
 
 #### Authentication
 
 Can be accomplished by either prepending to the API, or adding a middleware to the client implementation the validation of an HTTP Request Header.
 
-There are several ways to negotiate and issue a valid token to communicate the validator client with the remote signer, each of them not without drawbacks, from replay attacks, to the problem of distributing the credential to the validator client. In general, any method of authentication should be combined with encryption in transit to be succesful.
+There are several ways to negotiate and issue a valid token to authenticate the communication between the validator client and the remote signer, each of them with potential drawbacks (e.g replay attacks, challenges in distributing the token to the validator client, etc.). In general, any method of authentication must be combined with transport encryption to be effective.
 
-The operator can also implement ACL rules between the networks of the validator client and the remote signer, mitigating the threat to the one where the adversary needs to be in the actual client network to perform an attack.
+The operator can also implement network Access Control Lists (ACLs) between the validator client's network and the remote signer's network, reducing the attack surface by requiring a potential attacker to be positioned in the same network as the validator client.
 
 #### Pre-image validation
 
-A key feature for a remote signer, pre-image validation implies that not only the `signingRoot`, but all the required elements needed to perform complete validation of the message, are sent through the wire to obtain a signature
+A key feature for a remote signer, pre-image validation implies that not only the `signingRoot`, but all the required elements needed to perform complete validation of the message, are sent through the wire to obtain a signature.
 
-Can be accomplished by either prepending to the API, or adding a middleware to the client implementation a control that parses the message. There is no breaking of this document API specification, as any other field different from `signingRoot` will be ignored by the remote signer.
+This can be accomplished by either prepending to the API, or adding a middleware to the client implementation a control that parses the message. There is no breaking of this document API specification, as any other field different from `signingRoot` will be ignored by the remote signer.
 
-Implementers should address the additional requirements emerging for each specific validation, such as, slashing protection, as this entails the needs to manage a database and the mechanisms to update it. Also new threats need to be addressed and controlled, among them, attackers looking into tamper the source of data.
+Implementers should address the additional requirements emerging for each specific validation, such as, slashing protection, as this entails the needs to manage a database and the mechanisms to update it. Also new threats need to be addressed and controlled, among them, attackers looking into tampering the source of data.
 
 #### Key management
 
-There are several ways to store secret keys, namely Hardware security modules (HSM), Secrets management applications (e.g. Hashicorp Vault), cloud storage with tight private network ACL rules, or even raw files in a directory. In general the remote signer implementers will abstract the HTTP API from the storage medium.
+There are several ways to store secret keys, namely Hardware Security Modules (HSM), Secrets management applications (e.g. Hashicorp Vault), cloud storage with tight private network ACL rules, or even raw files in a directory. In general the remote signer implementers will abstract the storage medium from the HTTP API.
 
 Is in this perspective that any procedure to create, update, or delete keys should be worked apart from the client implementation.
 
-#### Encription in-transit
+#### Transport Encryption
 
 This feature can be accomplished by either prepending to the API, or adding a middleware to the client implementation.
 
