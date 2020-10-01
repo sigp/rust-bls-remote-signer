@@ -31,7 +31,6 @@ One goal of this package is to be standard compliant, that is, following an API 
     * `signingRoot`: [REQUIRED] A string representation of the hexadecimal value to be signed.
     * Any other field will be **ignored**
       * To allow for the installing of filter enhancements and/or plugins.
-      * A limit on the size of the payload will be implemented as a control.
 
 * Response
   * Returns `200` and a JSON containing the `signature` field, as a string representation of an hexadecimal value.
