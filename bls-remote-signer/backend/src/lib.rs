@@ -130,7 +130,6 @@ pub mod tests_commons {
     pub fn new_storage_with_tmp_dir() -> (T, TempDir) {
         let tmp_dir = TempDir::new("bls-remote-signer-test").unwrap();
         let storage = StorageRawDir::new(tmp_dir.path().to_str().unwrap()).unwrap();
-        // The methods defined in the trait are available for this arbitraty self type.
         (storage, tmp_dir)
     }
 
