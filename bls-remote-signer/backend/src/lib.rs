@@ -53,7 +53,7 @@ impl Backend<StorageRawDir> {
 
 impl<T: Storage> Backend<T> {
     /// Returns the available public keys in storage.
-    pub fn get_public_keys(self) -> Result<Vec<String>, BackendError> {
+    pub fn get_public_keys(&self) -> Result<Vec<String>, BackendError> {
         self.storage.get_public_keys()
     }
 

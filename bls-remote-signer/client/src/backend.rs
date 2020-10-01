@@ -19,7 +19,6 @@ pub fn get_public_keys<T: Storage, U>(
 ) -> Result<PublicKeysApiResponse, ApiError> {
     let public_keys = ctx
         .backend
-        .clone()
         .get_public_keys()
         .map_err(|e| ApiError::ServerError(format!("{}", e)))?;
 
