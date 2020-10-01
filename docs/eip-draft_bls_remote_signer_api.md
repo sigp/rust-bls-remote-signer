@@ -24,7 +24,7 @@ Consensus on the eth2 Blockchain is achieved via the proposal and attestation of
 
 The [eth2 specification](https://github.com/ethereum/eth2.0-specs) does not explicitly provide a directive on where this BLS private key must/should be stored, leaving this implementation detail to the client teams, who assume that this cryptographic secret is stored on the same host as the validator client.
 
-This assumption is sufficient in the use case where the validator client is running in a physically secure network (i.e. nobody, but the operator, has a chance to log-in into the machine hosting the validator client), as such configuration would only allow _outbound_ calls from the validator client. In this situation, only a physical security breach can allow an attacker to either have arbitrary access to the storage or to the memory of the device.
+This assumption is sufficient in the use case where the validator client is running in a physically secure network (i.e. nobody, but the operator, has a chance to log-in into the machine hosting the validator client), as such configuration would only allow _outbound_ calls from the validator client. In this situation, only a physical security breach, or a Remote Code Execution (RCE) vulnerability can allow an attacker to either have arbitrary access to the storage or to the memory of the device.
 
 There are, however, use cases where it is required by the operator to run a validator client node in less constrained security environments, as the ones given by a cloud provider. Notwithstanding any security expectation, nothing prevents a rogue operator from gaining arbitrary access to the assets running inside a node.
 
