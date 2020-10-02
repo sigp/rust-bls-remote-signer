@@ -3,10 +3,11 @@ mod storage;
 mod storage_raw_dir;
 mod utils;
 
+use bls::SecretKey;
 use clap::ArgMatches;
 pub use error::BackendError;
+use ethereum_types::H256;
 use lazy_static::lazy_static;
-use milagro_bls::{PublicKey, SecretKey, Signature};
 use regex::Regex;
 use slog::{info, Logger};
 pub use storage::Storage;
@@ -85,9 +86,9 @@ impl<T: Storage> Backend<T> {
         let secret_key: String = self.storage.get_secret_key(public_key)?;
         let secret_key: SecretKey = Self::validate_bls_pair(public_key, &secret_key)?;
 
-        let signature = Signature::new(&signing_root, &secret_key);
+        let signature = secret_key.sign(H256::from_slice(&signing_root));
 
-        let signature: String = bytes96_to_hex_string(signature.as_bytes())
+        let signature: String = bytes96_to_hex_string(signature.serialize())
             .expect("Writing to a string should never error.");
 
         Ok(signature)
@@ -96,15 +97,19 @@ impl<T: Storage> Backend<T> {
     /// Computes the public key from the retrieved `secret_key` and compares it
     /// with the given `public_key` parameter.
     fn validate_bls_pair(public_key: &str, secret_key: &str) -> Result<SecretKey, BackendError> {
+        // TODO
+        // Can I do this in one error message?
         let secret_key: Vec<u8> = hex_string_to_bytes(&secret_key).map_err(|e| {
             BackendError::InvalidSecretKey(format!("public_key: {}; {}", public_key, e))
         })?;
-        let secret_key = SecretKey::from_bytes(&secret_key).unwrap();
+        let secret_key: SecretKey = SecretKey::deserialize(&secret_key).map_err(|e| {
+            BackendError::InvalidSecretKey(format!("public_key: {}; {:?}", public_key, e))
+        })?;
 
         let pk_param_as_bytes = hex_string_to_bytes(&public_key)
             .map_err(|e| BackendError::InvalidPublicKey(format!("{}; {}", public_key, e)))?;
 
-        if &PublicKey::from_secret_key(&secret_key).as_bytes()[..] != pk_param_as_bytes {
+        if &secret_key.public_key().serialize()[..] != pk_param_as_bytes {
             return Err(BackendError::KeyMismatch(public_key.to_string()));
         }
 
