@@ -32,7 +32,7 @@ The situation is not better when the requirement is to execute the validators by
 
 The proposed solution comprises running a specialized node with exclusive access to the secret keys, listening to a simple API (defined in the [Specification](#specification) section), and returning the requested signatures. Operators working under this schema must utilize clients with the adequate feature supporting the consumption of this API.
 
-The focus of this specification is the supply of BLS signatures _on demand_. The aspects of authentication, key management (creation, update, and deletion), pre-image validation, and transport encryption are discussed in the [Rationale](#rationale) section of this document. Moreover, the [Thread Model](#threat-model) section of this document provides a (non-exhaustive) list of threats and attack vectors, along with the suggested related mitigation strategy.
+The focus of this specification is the supply of BLS signatures _on demand_. The aspects of authentication, key management (creation, update, and deletion), pre-image validation, and transport encryption are discussed in the [Rationale](#rationale) section of this document. Moreover, the [Threat Model](#threat-model) section of this document provides a (non-exhaustive) list of threats and attack vectors, along with the suggested related mitigation strategy.
 
 ## Specification
 
