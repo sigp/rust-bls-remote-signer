@@ -135,7 +135,7 @@ Implementers should address the additional requirements emerging for each specif
 
 There are several ways to store secret keys, namely Hardware Security Modules (HSM), Secrets management applications (e.g. Hashicorp Vault), cloud storage with tight private network ACL rules, or even raw files in a directory. In general the remote signer implementers will abstract the storage medium from the HTTP API.
 
-Is in this perspective that any procedure to create, update, or delete keys should be worked apart from the client implementation.
+It is in this perspective, that any procedure to create, update, or delete keys should be built separate from the client implementation.
 
 #### Transport Encryption
 
