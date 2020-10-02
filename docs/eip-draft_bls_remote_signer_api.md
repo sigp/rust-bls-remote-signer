@@ -105,7 +105,7 @@ Content | `{"error": "Key not found: <public_key_hex_string_without_0x>"}`
 
 ### URL parameter `:public-key` without `0x`
 
-By relaxing the constraint of using an hexadecimal, clients can opt-in to using custom ids for their private keys, and perform the adequate retrieving and matching with the secret key within the signer. This is, in the measure the remote signer implementer allows for this feature.
+By relaxing the constraint of requiring hexadecimal input, clients can opt-in to using custom ids for their private keys, and perform the adequate retrieving and matching with the secret key within the signer. That is, if the remote signer implementer allows for this feature.
 
 ### UNIX philosophy: Simple API
 
