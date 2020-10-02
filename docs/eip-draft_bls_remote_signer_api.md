@@ -125,7 +125,7 @@ The operator can also implement network Access Control Lists (ACLs) between the 
 
 #### Pre-image validation
 
-A key feature for a remote signer, pre-image validation implies that not only the `signingRoot`, but all the required elements needed to perform complete validation of the message, are sent through the wire to obtain a signature.
+A key feature for a remote signer, pre-image validation, implies that not only the `signingRoot`, but all the required elements needed to perform complete validation of the message, are sent through the wire to obtain a signature.
 
 A control that parses this pre-image will not be breaking this document API specification, as any other field different from `signingRoot` will be ignored by the remote signer.
 
