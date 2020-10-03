@@ -11,6 +11,6 @@ members = [
 
 [patch]
 [patch.crates-io]
-tree_hash = { git = "https://github.com/sigp/lighthouse", tag = "v0.2.13" }
-eth2_ssz = { git = "https://github.com/sigp/lighthouse", tag = "v0.2.13" }
 eth2_hashing = { git = "https://github.com/sigp/lighthouse", tag = "v0.2.13" }
+eth2_ssz = { git = "https://github.com/sigp/lighthouse", tag = "v0.2.13" }
+tree_hash = { git = "https://github.com/sigp/lighthouse", tag = "v0.2.13" }
