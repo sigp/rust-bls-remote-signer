@@ -93,13 +93,13 @@ impl<T: Storage> Backend<T> {
     /// Computes the public key from the retrieved `secret_key` and compares it
     /// with the given `public_key` parameter.
     fn validate_bls_pair(public_key: &str, secret_key: &str) -> Result<SecretKey, BackendError> {
-        // TODO
-        // Can I do this in one error message?
-        let secret_key: Vec<u8> = hex_string_to_bytes(&secret_key).map_err(|e| {
+        let deserialize = |sk: &str| -> Result<SecretKey, String> {
+            let sk = hex_string_to_bytes(&sk)?;
+            Ok(SecretKey::deserialize(&sk).map_err(|e| format!("{:?}", e))?)
+        };
+
+        let secret_key: SecretKey = deserialize(secret_key).map_err(|e| {
             BackendError::InvalidSecretKey(format!("public_key: {}; {}", public_key, e))
-        })?;
-        let secret_key: SecretKey = SecretKey::deserialize(&secret_key).map_err(|e| {
-            BackendError::InvalidSecretKey(format!("public_key: {}; {:?}", public_key, e))
         })?;
 
         let pk_param_as_bytes = hex_string_to_bytes(&public_key)
