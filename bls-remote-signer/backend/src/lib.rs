@@ -91,7 +91,7 @@ impl<T: Storage> Backend<T> {
     }
 
     /// Computes the public key from the retrieved `secret_key` and compares it
-    /// with the given `public_key` parameter.
+    /// with the given `public_key` parameter, returning a deserialized SecretKey.
     fn validate_bls_pair(public_key: &str, secret_key: &str) -> Result<SecretKey, BackendError> {
         let deserialize = |sk: &str| -> Result<SecretKey, String> {
             let sk = hex_string_to_bytes(&sk)?;
