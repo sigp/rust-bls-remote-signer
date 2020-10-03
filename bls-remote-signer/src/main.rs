@@ -6,6 +6,16 @@ use std::path::PathBuf;
 use std::process::exit;
 use version::VERSION;
 
+fn bls_library_name() -> &'static str {
+    if cfg!(feature = "portable") {
+        "blst-portable"
+    } else if cfg!(feature = "milagro") {
+        "milagro"
+    } else {
+        "blst"
+    }
+}
+
 fn main() {
     // Parse the CLI parameters.
     let matches = App::new("BLS_Remote_Signer")
@@ -17,6 +27,15 @@ fn main() {
             This service is designed to be consumed by Ethereum 2.0 clients, \
             looking for a more secure avenue to store their BLS12-381 secret keys, \
             while running their validators in more permisive and/or scalable environments.",
+        )
+        .long_version(
+            format!(
+                "{}\n\
+                 BLS Library: {}",
+                VERSION.replace("BLS_Remote_Signer/", ""),
+                bls_library_name()
+            )
+            .as_str(),
         )
         .arg(
             Arg::with_name("storage-raw-dir")
