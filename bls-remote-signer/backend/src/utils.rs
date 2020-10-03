@@ -71,10 +71,6 @@ mod utils {
     use super::*;
     use helpers::*;
 
-    fn compare_vec_u8(v1: Vec<u8>, v2: Vec<u8>) -> bool {
-        v1.iter().zip(v2.iter()).all(|(a, b)| a == b)
-    }
-
     #[test]
     fn fn_hex_string_to_bytes() {
         assert_eq!(
@@ -102,30 +98,30 @@ mod utils {
             SECRET_KEY_1_BYTES
         );
 
-        assert!(compare_vec_u8(
+        assert_eq!(
             hex_string_to_bytes(&PUBLIC_KEY_1).unwrap(),
             PUBLIC_KEY_1_BYTES.to_vec()
-        ));
+        );
 
-        assert!(compare_vec_u8(
+        assert_eq!(
             hex_string_to_bytes(&SIGNING_ROOT[2..]).unwrap(),
             SIGNING_ROOT_BYTES.to_vec()
-        ));
+        );
 
-        assert!(compare_vec_u8(
+        assert_eq!(
             hex_string_to_bytes(&EXPECTED_SIGNATURE_1[2..]).unwrap(),
             EXPECTED_SIGNATURE_1_BYTES.to_vec()
-        ));
+        );
 
-        assert!(compare_vec_u8(
+        assert_eq!(
             hex_string_to_bytes(&EXPECTED_SIGNATURE_2[2..]).unwrap(),
             EXPECTED_SIGNATURE_2_BYTES.to_vec()
-        ));
+        );
 
-        assert!(compare_vec_u8(
+        assert_eq!(
             hex_string_to_bytes(&EXPECTED_SIGNATURE_3[2..]).unwrap(),
             EXPECTED_SIGNATURE_3_BYTES.to_vec()
-        ));
+        );
 
         assert_eq!(
             hex_string_to_bytes(&"0a0b11".to_string()).unwrap(),
@@ -155,10 +151,7 @@ mod utils {
     fn fn_validate_bls_pair() {
         let test_ok_case = |pk: &str, sk: &str, sk_bytes: &[u8; 32]| {
             let serialized_secret_key = validate_bls_pair(pk, sk).unwrap().serialize();
-            assert!(compare_vec_u8(
-                serialized_secret_key.as_bytes().to_vec(),
-                sk_bytes.to_vec()
-            ));
+            assert_eq!(serialized_secret_key.as_bytes().to_vec(), sk_bytes.to_vec());
         };
 
         test_ok_case(PUBLIC_KEY_1, SECRET_KEY_1, &SECRET_KEY_1_BYTES);
