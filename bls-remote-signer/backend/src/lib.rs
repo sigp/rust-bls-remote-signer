@@ -79,10 +79,6 @@ impl<T: Storage> Backend<T> {
         let signing_root: Vec<u8> = hex_string_to_bytes(&signing_root[2..])
             .map_err(|e| BackendError::InvalidSigningRoot(format!("{}; {}", signing_root, e)))?;
 
-        // TODO
-        // Consider "zeroization" for the `secret_key`.
-        // * We want to have only one copy of this value in memory during this scope.
-        // * We want to zeroize the used memory once this value is dropped.
         let secret_key: String = self.storage.get_secret_key(public_key)?;
         let secret_key: SecretKey = Self::validate_bls_pair(public_key, &secret_key)?;
 

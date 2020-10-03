@@ -3,8 +3,6 @@ use std::fmt::{Error, Write};
 // While `hex::decode` provides this functionality, we are implemeting
 // here to be able to work on "zeroization" if required.
 pub fn hex_string_to_bytes(data: &str) -> Result<Vec<u8>, String> {
-    // TODO
-    // See note on "zeroization" at this crate's `lib.rs`.
     if data.len() % 2 != 0 {
         return Err("Odd length".to_string());
     }

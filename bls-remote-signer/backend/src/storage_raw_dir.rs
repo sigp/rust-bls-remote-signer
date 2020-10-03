@@ -62,8 +62,6 @@ impl Storage for StorageRawDir {
         })?;
         let mut buf_reader = BufReader::new(file);
 
-        // TODO
-        // See note on "zeroization" at this crate's `lib.rs`.
         let mut secret_key = String::new();
         buf_reader.read_to_string(&mut secret_key)?;
 
