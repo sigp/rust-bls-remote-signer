@@ -172,9 +172,9 @@ mod utils {
 
         test_error_case(
             PUBLIC_KEY_2,
-            &"KeyTamperedByEvilH4x0r".to_string(),
+            &"TamperedKey%#$#%#$$&##00£$%$$£%$".to_string(),
             &format!(
-                "Invalid secret key: public_key: {}; Invalid hex character: K at index 0",
+                "Invalid secret key: public_key: {}; Invalid hex character: T at index 0",
                 PUBLIC_KEY_2
             ),
         );
@@ -188,7 +188,7 @@ mod utils {
             ),
         );
 
-        let bad_pk_param = "API_did_not_validate_this";
+        let bad_pk_param = "not_validated_by_the_api_handler!";
         test_error_case(
             bad_pk_param,
             SECRET_KEY_1,
