@@ -12,38 +12,68 @@ One goal of this package is to be standard compliant, that is, following an API 
 
 ### Standard
 
-#### `GET /upcheck`
+### `GET /upcheck`
 
-* Response
-  * Returns `200` and a JSON payload containing `{"status": "OK"}` if the service is running.
+_**Responses**_
 
-#### `GET /publicKeys`
+Success | <br>
+--- | ---
+Code | `200`
+Content | `{"status": "OK"}`
 
-* Response
-  * Returns `200` and a JSON payload containing a list of the BLS public keys available.
-  * Returns `404` and an empty JSON payload if there are no keys available.
-  * Returns `500` on server errors.
+---
 
-#### `POST /sign/:public_key`
+### `GET /publicKeys`
 
-* Request
-  * A JSON payload with the parameters
-    * `signingRoot`: [REQUIRED] A string representation of the hexadecimal value to be signed.
-    * Any other field will be **ignored**
-      * To allow for the installing of filter enhancements and/or plugins.
+_**Responses**_
 
-* Response
-  * Returns `200` and a JSON containing the `signature` field, as a string representation of a hexadecimal value.
-  * Returns `404` if there is no secret key matching the given public key.
-  * Returns `400` on bad requests:
-    * Malformed JSON requests.
-    * Missing or invalid field `signingRoot`.
-    * Invalid request path.
-    * Invalid `:public_key` parameter.
-  * Returns `500` on server errors:
-    * Storage errors.
-    * Invalid secret key retrieved.
-    * Key pair mismatch.
+Success | <br>
+--- | ---
+Code | `200`
+Content | `{"public_keys": "[public_key_hex_string_without_0x]"}`
+
+_or_
+
+Error | <br>
+--- | ---
+Code | `404`
+Content | `{"error": "No keys found in storage."}`
+
+---
+
+### `POST /sign/:public_key`
+
+URL Parameter | <br>
+--- | ---
+`:public_key` | `public_key_hex_string_without_0x`
+
+_**Request**_
+
+JSON Body | <br> | <br>
+--- | --- | ---
+`signingRoot` | **Required** | A string representation of the hexadecimal value to be signed
+<br> | Optional | Any other field will be ignored by the signer
+
+_**Responses**_
+
+Success | <br>
+--- | ---
+Code |  `200`
+Content | `{"signature": "<signature_hex_string>"}`
+
+_or_
+
+Error | <br>
+--- | ---
+Code |  `400`
+Content | `{"error": "<Bad Request Error Message>"}`
+
+_or_
+
+Error | <br>
+--- | ---
+Code |  `404`
+Content | `{"error": "Key not found: <public_key_hex_string_without_0x>"}`
 
 ## Build instructions
 
