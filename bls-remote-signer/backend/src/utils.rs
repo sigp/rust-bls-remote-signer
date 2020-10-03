@@ -1,3 +1,5 @@
+use crate::BackendError;
+use bls::SecretKey;
 use std::fmt::{Error, Write};
 
 // While `hex::decode` provides this functionality, we are implemeting
@@ -42,15 +44,39 @@ pub fn bytes96_to_hex_string(data: [u8; 96]) -> Result<String, Error> {
     Ok(s)
 }
 
+/// Computes the public key from the retrieved `secret_key` and compares it
+/// with the given `public_key` parameter, returning a deserialized SecretKey.
+pub fn validate_bls_pair(public_key: &str, secret_key: &str) -> Result<SecretKey, BackendError> {
+    let deserialize = |sk: &str| -> Result<SecretKey, String> {
+        let sk = hex_string_to_bytes(&sk)?;
+        Ok(SecretKey::deserialize(&sk).map_err(|e| format!("{:?}", e))?)
+    };
+
+    let secret_key: SecretKey = deserialize(secret_key).map_err(|e| {
+        BackendError::InvalidSecretKey(format!("public_key: {}; {}", public_key, e))
+    })?;
+
+    let pk_param_as_bytes = hex_string_to_bytes(&public_key)
+        .map_err(|e| BackendError::InvalidPublicKey(format!("{}; {}", public_key, e)))?;
+
+    if &secret_key.public_key().serialize()[..] != pk_param_as_bytes {
+        return Err(BackendError::KeyMismatch(public_key.to_string()));
+    }
+
+    Ok(secret_key)
+}
+
 #[cfg(test)]
 mod utils {
     use super::*;
     use helpers::*;
 
+    fn compare_vec_u8(v1: Vec<u8>, v2: Vec<u8>) -> bool {
+        v1.iter().zip(v2.iter()).all(|(a, b)| a == b)
+    }
+
     #[test]
     fn fn_hex_string_to_bytes() {
-        let compare = |v1: Vec<u8>, v2: Vec<u8>| v1.iter().zip(v2.iter()).all(|(a, b)| a == b);
-
         assert_eq!(
             hex_string_to_bytes(&"0aa".to_string()).err(),
             Some("Odd length".to_string())
@@ -76,27 +102,27 @@ mod utils {
             SECRET_KEY_1_BYTES
         );
 
-        assert!(compare(
+        assert!(compare_vec_u8(
             hex_string_to_bytes(&PUBLIC_KEY_1).unwrap(),
             PUBLIC_KEY_1_BYTES.to_vec()
         ));
 
-        assert!(compare(
+        assert!(compare_vec_u8(
             hex_string_to_bytes(&SIGNING_ROOT[2..]).unwrap(),
             SIGNING_ROOT_BYTES.to_vec()
         ));
 
-        assert!(compare(
+        assert!(compare_vec_u8(
             hex_string_to_bytes(&EXPECTED_SIGNATURE_1[2..]).unwrap(),
             EXPECTED_SIGNATURE_1_BYTES.to_vec()
         ));
 
-        assert!(compare(
+        assert!(compare_vec_u8(
             hex_string_to_bytes(&EXPECTED_SIGNATURE_2[2..]).unwrap(),
             EXPECTED_SIGNATURE_2_BYTES.to_vec()
         ));
 
-        assert!(compare(
+        assert!(compare_vec_u8(
             hex_string_to_bytes(&EXPECTED_SIGNATURE_3[2..]).unwrap(),
             EXPECTED_SIGNATURE_3_BYTES.to_vec()
         ));
@@ -122,6 +148,63 @@ mod utils {
         assert_eq!(
             bytes96_to_hex_string(EXPECTED_SIGNATURE_3_BYTES).unwrap(),
             EXPECTED_SIGNATURE_3
+        );
+    }
+
+    #[test]
+    fn fn_validate_bls_pair() {
+        let test_ok_case = |pk: &str, sk: &str, sk_bytes: &[u8; 32]| {
+            let serialized_secret_key = validate_bls_pair(pk, sk).unwrap().serialize();
+            assert!(compare_vec_u8(
+                serialized_secret_key.as_bytes().to_vec(),
+                sk_bytes.to_vec()
+            ));
+        };
+
+        test_ok_case(PUBLIC_KEY_1, SECRET_KEY_1, &SECRET_KEY_1_BYTES);
+
+        let test_error_case = |pk: &str, sk: &str, expected_error: &str| {
+            assert_eq!(
+                validate_bls_pair(pk, sk).err().unwrap().to_string(),
+                expected_error
+            );
+        };
+
+        test_error_case(
+            PUBLIC_KEY_2,
+            &"KeyTamperedByEvilH4x0r".to_string(),
+            &format!(
+                "Invalid secret key: public_key: {}; Invalid hex character: K at index 0",
+                PUBLIC_KEY_2
+            ),
+        );
+
+        test_error_case(
+            PUBLIC_KEY_2,
+            &"deadbeef".to_string(),
+            &format!(
+                "Invalid secret key: public_key: {}; InvalidSecretKeyLength {{ got: 4, expected: 32 }}",
+                PUBLIC_KEY_2
+            ),
+        );
+
+        let bad_pk_param = "API_did_not_validate_this";
+        test_error_case(
+            bad_pk_param,
+            SECRET_KEY_1,
+            &format!("Invalid public key: {}; Odd length", bad_pk_param),
+        );
+
+        test_error_case(
+            PUBLIC_KEY_1,
+            SECRET_KEY_2,
+            &format!("Key mismatch: {}", PUBLIC_KEY_1),
+        );
+
+        test_error_case(
+            PUBLIC_KEY_2,
+            SECRET_KEY_3,
+            &format!("Key mismatch: {}", PUBLIC_KEY_2),
         );
     }
 }

@@ -12,7 +12,7 @@ use regex::Regex;
 use slog::{info, Logger};
 pub use storage::Storage;
 use storage_raw_dir::StorageRawDir;
-use utils::{bytes96_to_hex_string, hex_string_to_bytes};
+use utils::{bytes96_to_hex_string, hex_string_to_bytes, validate_bls_pair};
 
 lazy_static! {
     static ref PUBLIC_KEY_REGEX: Regex = Regex::new(r"[0-9a-fA-F]{96}").unwrap();
@@ -80,7 +80,7 @@ impl<T: Storage> Backend<T> {
             .map_err(|e| BackendError::InvalidSigningRoot(format!("{}; {}", signing_root, e)))?;
 
         let secret_key: String = self.storage.get_secret_key(public_key)?;
-        let secret_key: SecretKey = Self::validate_bls_pair(public_key, &secret_key)?;
+        let secret_key: SecretKey = validate_bls_pair(public_key, &secret_key)?;
 
         let signature = secret_key.sign(H256::from_slice(&signing_root));
 
@@ -88,28 +88,6 @@ impl<T: Storage> Backend<T> {
             .expect("Writing to a string should never error.");
 
         Ok(signature)
-    }
-
-    /// Computes the public key from the retrieved `secret_key` and compares it
-    /// with the given `public_key` parameter, returning a deserialized SecretKey.
-    fn validate_bls_pair(public_key: &str, secret_key: &str) -> Result<SecretKey, BackendError> {
-        let deserialize = |sk: &str| -> Result<SecretKey, String> {
-            let sk = hex_string_to_bytes(&sk)?;
-            Ok(SecretKey::deserialize(&sk).map_err(|e| format!("{:?}", e))?)
-        };
-
-        let secret_key: SecretKey = deserialize(secret_key).map_err(|e| {
-            BackendError::InvalidSecretKey(format!("public_key: {}; {}", public_key, e))
-        })?;
-
-        let pk_param_as_bytes = hex_string_to_bytes(&public_key)
-            .map_err(|e| BackendError::InvalidPublicKey(format!("{}; {}", public_key, e)))?;
-
-        if &secret_key.public_key().serialize()[..] != pk_param_as_bytes {
-            return Err(BackendError::KeyMismatch(public_key.to_string()));
-        }
-
-        Ok(secret_key)
     }
 }
 
