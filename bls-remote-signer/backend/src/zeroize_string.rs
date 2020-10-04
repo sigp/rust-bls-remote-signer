@@ -149,7 +149,7 @@ mod object {
         // Check if the underlying bytes were zeroized.
         // At this point the first half is already reclaimed and assigned,
         // so we will just examine the other half.
-        for i in SECRET_KEY_1.len() / 4..SECRET_KEY_1.len() / 2 {
+        for i in SECRET_KEY_1.len() / 2..SECRET_KEY_1.len() {
             unsafe {
                 assert_eq!(*((ptr_to_buf + i) as *const u8), 0);
             }
