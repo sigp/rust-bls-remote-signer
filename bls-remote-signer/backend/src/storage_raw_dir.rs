@@ -1,4 +1,4 @@
-use crate::{BackendError, Storage, PUBLIC_KEY_REGEX};
+use crate::{BackendError, Storage, ZeroizeString, PUBLIC_KEY_REGEX};
 use std::fs::read_dir;
 use std::fs::File;
 use std::io::prelude::Read;
@@ -55,7 +55,7 @@ impl Storage for StorageRawDir {
 
     /// Gets a requested secret key by their reference, its public key.
     /// This function DOES NOT check the contents of the retrieved file.
-    fn get_secret_key(&self, input: &str) -> Result<String, BackendError> {
+    fn get_secret_key(&self, input: &str) -> Result<ZeroizeString, BackendError> {
         let file = File::open(self.path.join(input)).map_err(|e| match e.kind() {
             std::io::ErrorKind::NotFound => BackendError::KeyNotFound(input.to_string()),
             _ => e.into(),
@@ -68,8 +68,7 @@ impl Storage for StorageRawDir {
         // Remove that `\n` without cloning.
         secret_key.pop();
 
-        // Moving the value to the caller.
-        Ok(secret_key)
+        Ok(ZeroizeString::from(secret_key))
     }
 }
 
@@ -174,6 +173,9 @@ mod get_secret_key {
         let (storage, tmp_dir) = new_storage_with_tmp_dir();
         add_key_files(&tmp_dir);
 
-        assert_eq!(storage.get_secret_key(PUBLIC_KEY_1).unwrap(), SECRET_KEY_1);
+        assert_eq!(
+            storage.get_secret_key(PUBLIC_KEY_1).unwrap().as_ref(),
+            SECRET_KEY_1.as_bytes()
+        );
     }
 }

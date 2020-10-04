@@ -76,11 +76,13 @@ dependencies = [
  "clap",
  "ethereum-types",
  "helpers",
+ "hex 0.4.2",
  "lazy_static",
  "regex",
  "slog",
  "sloggers",
  "tempdir",
+ "zeroize",
 ]
 
 [[package]]

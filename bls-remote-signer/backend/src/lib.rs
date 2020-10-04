@@ -2,17 +2,20 @@ mod error;
 mod storage;
 mod storage_raw_dir;
 mod utils;
+mod zeroize_string;
 
+use crate::zeroize_string::ZeroizeString;
 use bls::SecretKey;
 use clap::ArgMatches;
 pub use error::BackendError;
 use ethereum_types::H256;
+use hex::decode;
 use lazy_static::lazy_static;
 use regex::Regex;
 use slog::{info, Logger};
 pub use storage::Storage;
 use storage_raw_dir::StorageRawDir;
-use utils::{bytes96_to_hex_string, hex_string_to_bytes, validate_bls_pair};
+use utils::{bytes96_to_hex_string, validate_bls_pair};
 
 lazy_static! {
     static ref PUBLIC_KEY_REGEX: Regex = Regex::new(r"[0-9a-fA-F]{96}").unwrap();
@@ -76,11 +79,11 @@ impl<T: Storage> Backend<T> {
             )));
         }
 
-        let signing_root: Vec<u8> = hex_string_to_bytes(&signing_root[2..])
+        let signing_root: Vec<u8> = decode(&signing_root[2..])
             .map_err(|e| BackendError::InvalidSigningRoot(format!("{}; {}", signing_root, e)))?;
 
-        let secret_key: String = self.storage.get_secret_key(public_key)?;
-        let secret_key: SecretKey = validate_bls_pair(public_key, &secret_key)?;
+        let secret_key: ZeroizeString = self.storage.get_secret_key(public_key)?;
+        let secret_key: SecretKey = validate_bls_pair(public_key, secret_key)?;
 
         let signature = secret_key.sign(H256::from_slice(&signing_root));
 
@@ -301,11 +304,11 @@ pub mod backend_raw_dir_sign_message {
         );
         test_case(
             "0xdeadbeefzz",
-            "Invalid signing root: 0xdeadbeefzz; Invalid hex character: z at index 8",
+            "Invalid signing root: 0xdeadbeefzz; Invalid character \'z\' at position 8",
         );
         test_case(
             "0xdeadbeef1",
-            "Invalid signing root: 0xdeadbeef1; Odd length",
+            "Invalid signing root: 0xdeadbeef1; Odd number of digits",
         );
     }
 
