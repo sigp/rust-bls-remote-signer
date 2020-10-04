@@ -125,27 +125,31 @@ mod object {
             // to the first byte of its slice.
             let s: String = s.to_string();
             let s_ptr = s.as_ptr();
+
+            // Just to make sure that the pointer of the buffer is NOT
+            // the same as the pointer of the underlying buffer.
             assert_ne!(&s as *const String as usize, s_ptr as usize);
 
             let z = ZeroizeString::from(s);
 
             // Get the pointer to the underlying buffer,
-            // We want to make sure is the same of the received string literal.
+            // We want to make sure is the same as the received string literal.
+            // That is, no copies of the contents.
             let ptr_to_buf = z.as_ref().as_ptr();
             assert_eq!(ptr_to_buf, s_ptr);
 
-            // We exit this scope, returning the pointer to the buffer,
-            // so we can verify zeroization.
+            // We exit this scope, returning to the caller the pointer to
+            // the buffer, that we'll use to verify the zeroization.
             ptr_to_buf as usize
         };
 
-        // The value should be zeroized after going out of scope.
+        // Call the closure.
         let ptr_to_buf = some_scope(SECRET_KEY_1);
 
         // Check if the underlying bytes were zeroized.
-        // Since at this point the first half is already reclaimed
-        // after the drop, we just examine the other half.
-        for i in 16..SECRET_KEY_1.len() / 2 {
+        // At this point the first half is already reclaimed and assigned,
+        // so we will just examine the other half.
+        for i in SECRET_KEY_1.len() / 4..SECRET_KEY_1.len() / 2 {
             unsafe {
                 assert_eq!(*((ptr_to_buf + i) as *const u8), 0);
             }
