@@ -2,17 +2,20 @@ mod error;
 mod storage;
 mod storage_raw_dir;
 mod utils;
+mod zeroize_string;
 
+use crate::zeroize_string::ZeroizeString;
 use bls::SecretKey;
 use clap::ArgMatches;
 pub use error::BackendError;
 use ethereum_types::H256;
+use hex::decode;
 use lazy_static::lazy_static;
 use regex::Regex;
 use slog::{info, Logger};
 pub use storage::Storage;
 use storage_raw_dir::StorageRawDir;
-use utils::{bytes96_to_hex_string, hex_string_to_bytes};
+use utils::{bytes96_to_hex_string, validate_bls_pair};
 
 lazy_static! {
     static ref PUBLIC_KEY_REGEX: Regex = Regex::new(r"[0-9a-fA-F]{96}").unwrap();
@@ -76,15 +79,11 @@ impl<T: Storage> Backend<T> {
             )));
         }
 
-        let signing_root: Vec<u8> = hex_string_to_bytes(&signing_root[2..])
+        let signing_root: Vec<u8> = decode(&signing_root[2..])
             .map_err(|e| BackendError::InvalidSigningRoot(format!("{}; {}", signing_root, e)))?;
 
-        // TODO
-        // Consider "zeroization" for the `secret_key`.
-        // * We want to have only one copy of this value in memory during this scope.
-        // * We want to zeroize the used memory once this value is dropped.
-        let secret_key: String = self.storage.get_secret_key(public_key)?;
-        let secret_key: SecretKey = Self::validate_bls_pair(public_key, &secret_key)?;
+        let secret_key: ZeroizeString = self.storage.get_secret_key(public_key)?;
+        let secret_key: SecretKey = validate_bls_pair(public_key, secret_key)?;
 
         let signature = secret_key.sign(H256::from_slice(&signing_root));
 
@@ -92,28 +91,6 @@ impl<T: Storage> Backend<T> {
             .expect("Writing to a string should never error.");
 
         Ok(signature)
-    }
-
-    /// Computes the public key from the retrieved `secret_key` and compares it
-    /// with the given `public_key` parameter.
-    fn validate_bls_pair(public_key: &str, secret_key: &str) -> Result<SecretKey, BackendError> {
-        // TODO
-        // Can I do this in one error message?
-        let secret_key: Vec<u8> = hex_string_to_bytes(&secret_key).map_err(|e| {
-            BackendError::InvalidSecretKey(format!("public_key: {}; {}", public_key, e))
-        })?;
-        let secret_key: SecretKey = SecretKey::deserialize(&secret_key).map_err(|e| {
-            BackendError::InvalidSecretKey(format!("public_key: {}; {:?}", public_key, e))
-        })?;
-
-        let pk_param_as_bytes = hex_string_to_bytes(&public_key)
-            .map_err(|e| BackendError::InvalidPublicKey(format!("{}; {}", public_key, e)))?;
-
-        if &secret_key.public_key().serialize()[..] != pk_param_as_bytes {
-            return Err(BackendError::KeyMismatch(public_key.to_string()));
-        }
-
-        Ok(secret_key)
     }
 }
 
@@ -327,11 +304,11 @@ pub mod backend_raw_dir_sign_message {
         );
         test_case(
             "0xdeadbeefzz",
-            "Invalid signing root: 0xdeadbeefzz; Invalid hex character: z at index 8",
+            "Invalid signing root: 0xdeadbeefzz; Invalid character \'z\' at position 8",
         );
         test_case(
             "0xdeadbeef1",
-            "Invalid signing root: 0xdeadbeef1; Odd length",
+            "Invalid signing root: 0xdeadbeef1; Odd number of digits",
         );
     }
 

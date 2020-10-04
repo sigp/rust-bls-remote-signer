@@ -1,32 +1,8 @@
+use crate::{BackendError, ZeroizeString};
+use bls::SecretKey;
+use hex::decode;
 use std::fmt::{Error, Write};
-
-// While `hex::decode` provides this functionality, we are implemeting
-// here to be able to work on "zeroization" if required.
-pub fn hex_string_to_bytes(data: &str) -> Result<Vec<u8>, String> {
-    // TODO
-    // See note on "zeroization" at this crate's `lib.rs`.
-    if data.len() % 2 != 0 {
-        return Err("Odd length".to_string());
-    }
-
-    data.as_bytes()
-        .chunks(2)
-        .enumerate()
-        .map(|(i, pair)| Ok(val(pair[0], 2 * i)? << 4 | val(pair[1], 2 * i + 1)?))
-        .collect()
-}
-
-fn val(c: u8, idx: usize) -> Result<u8, String> {
-    match c {
-        b'A'..=b'F' => Ok(c - b'A' + 10),
-        b'a'..=b'f' => Ok(c - b'a' + 10),
-        b'0'..=b'9' => Ok(c - b'0'),
-        _ => Err(format!(
-            "Invalid hex character: {} at index {}",
-            c as char, idx
-        )),
-    }
-}
+use std::str;
 
 // hex::encode only allows up to 32 bytes.
 pub fn bytes96_to_hex_string(data: [u8; 96]) -> Result<String, Error> {
@@ -44,70 +20,30 @@ pub fn bytes96_to_hex_string(data: [u8; 96]) -> Result<String, Error> {
     Ok(s)
 }
 
+/// Validates the match as a BLS pair of the public and secret keys given,
+/// consuming the secret key parameter, and returning a deserialized SecretKey.
+pub fn validate_bls_pair(
+    public_key: &str,
+    secret_key: ZeroizeString,
+) -> Result<SecretKey, BackendError> {
+    let secret_key: SecretKey = secret_key.into_bls_sk().map_err(|e| {
+        BackendError::InvalidSecretKey(format!("public_key: {}; {}", public_key, e))
+    })?;
+
+    let pk_param_as_bytes = decode(&public_key)
+        .map_err(|e| BackendError::InvalidPublicKey(format!("{}; {}", public_key, e)))?;
+
+    if &secret_key.public_key().serialize()[..] != pk_param_as_bytes {
+        return Err(BackendError::KeyMismatch(public_key.to_string()));
+    }
+
+    Ok(secret_key)
+}
+
 #[cfg(test)]
-mod utils {
+mod functions {
     use super::*;
     use helpers::*;
-
-    #[test]
-    fn fn_hex_string_to_bytes() {
-        let compare = |v1: Vec<u8>, v2: Vec<u8>| v1.iter().zip(v2.iter()).all(|(a, b)| a == b);
-
-        assert_eq!(
-            hex_string_to_bytes(&"0aa".to_string()).err(),
-            Some("Odd length".to_string())
-        );
-
-        assert_eq!(
-            hex_string_to_bytes(&"0xdeadbeef".to_string()).err(),
-            Some("Invalid hex character: x at index 1".to_string())
-        );
-
-        assert_eq!(
-            hex_string_to_bytes(&"n00bn00b".to_string()).err(),
-            Some("Invalid hex character: n at index 0".to_string())
-        );
-
-        assert_eq!(
-            hex_string_to_bytes(&"abcdefgh".to_string()).err(),
-            Some("Invalid hex character: g at index 6".to_string())
-        );
-
-        assert_eq!(
-            hex_string_to_bytes(&SECRET_KEY_1).unwrap(),
-            SECRET_KEY_1_BYTES
-        );
-
-        assert!(compare(
-            hex_string_to_bytes(&PUBLIC_KEY_1).unwrap(),
-            PUBLIC_KEY_1_BYTES.to_vec()
-        ));
-
-        assert!(compare(
-            hex_string_to_bytes(&SIGNING_ROOT[2..]).unwrap(),
-            SIGNING_ROOT_BYTES.to_vec()
-        ));
-
-        assert!(compare(
-            hex_string_to_bytes(&EXPECTED_SIGNATURE_1[2..]).unwrap(),
-            EXPECTED_SIGNATURE_1_BYTES.to_vec()
-        ));
-
-        assert!(compare(
-            hex_string_to_bytes(&EXPECTED_SIGNATURE_2[2..]).unwrap(),
-            EXPECTED_SIGNATURE_2_BYTES.to_vec()
-        ));
-
-        assert!(compare(
-            hex_string_to_bytes(&EXPECTED_SIGNATURE_3[2..]).unwrap(),
-            EXPECTED_SIGNATURE_3_BYTES.to_vec()
-        ));
-
-        assert_eq!(
-            hex_string_to_bytes(&"0a0b11".to_string()).unwrap(),
-            vec![10, 11, 17]
-        );
-    }
 
     #[test]
     fn fn_bytes96_to_hex_string() {
@@ -124,6 +60,64 @@ mod utils {
         assert_eq!(
             bytes96_to_hex_string(EXPECTED_SIGNATURE_3_BYTES).unwrap(),
             EXPECTED_SIGNATURE_3
+        );
+    }
+
+    #[test]
+    fn fn_validate_bls_pair() {
+        let test_ok_case = |pk: &str, sk: ZeroizeString, sk_bytes: &[u8; 32]| {
+            let serialized_secret_key = validate_bls_pair(pk, sk).unwrap().serialize();
+            assert_eq!(serialized_secret_key.as_bytes().to_vec(), sk_bytes.to_vec());
+        };
+
+        test_ok_case(
+            PUBLIC_KEY_1,
+            ZeroizeString::from(SECRET_KEY_1.to_string()),
+            &SECRET_KEY_1_BYTES,
+        );
+
+        let test_error_case = |pk: &str, sk: ZeroizeString, expected_error: &str| {
+            assert_eq!(
+                validate_bls_pair(pk, sk).err().unwrap().to_string(),
+                expected_error
+            );
+        };
+
+        test_error_case(
+            PUBLIC_KEY_2,
+            ZeroizeString::from("TamperedKey%#$#%#$$&##00£$%$$£%$".to_string()),
+            &format!(
+                "Invalid secret key: public_key: {}; Invalid hex character: T at index 0",
+                PUBLIC_KEY_2
+            ),
+        );
+
+        test_error_case(
+            PUBLIC_KEY_2,
+            ZeroizeString::from("deadbeef".to_string()),
+            &format!(
+                "Invalid secret key: public_key: {}; InvalidSecretKeyLength {{ got: 4, expected: 32 }}",
+                PUBLIC_KEY_2
+            ),
+        );
+
+        let bad_pk_param = "not_validated_by_the_api_handler!";
+        test_error_case(
+            bad_pk_param,
+            ZeroizeString::from(SECRET_KEY_1.to_string()),
+            &format!("Invalid public key: {}; Odd number of digits", bad_pk_param),
+        );
+
+        test_error_case(
+            PUBLIC_KEY_1,
+            ZeroizeString::from(SECRET_KEY_2.to_string()),
+            &format!("Key mismatch: {}", PUBLIC_KEY_1),
+        );
+
+        test_error_case(
+            PUBLIC_KEY_2,
+            ZeroizeString::from(SECRET_KEY_3.to_string()),
+            &format!("Key mismatch: {}", PUBLIC_KEY_2),
         );
     }
 }
