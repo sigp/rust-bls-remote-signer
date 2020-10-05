@@ -126,7 +126,7 @@ mod object {
             let s: String = s.to_string();
             let s_ptr = s.as_ptr();
 
-            // Just to make sure that the pointer of the buffer is NOT
+            // Just to make sure that the pointer of the string is NOT
             // the same as the pointer of the underlying buffer.
             assert_ne!(&s as *const String as usize, s_ptr as usize);
 
