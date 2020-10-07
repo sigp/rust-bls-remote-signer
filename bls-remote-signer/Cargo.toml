@@ -1,5 +1,5 @@
 [package]
-name = "bls-remote-signer"
+name = "bls_remote_signer"
 version = "0.1.0"
 authors = ["Sigma Prime <contact@sigmaprime.io>"]
 edition = "2018"
