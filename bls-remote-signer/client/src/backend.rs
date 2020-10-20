@@ -1,5 +1,5 @@
 use crate::api_error::ApiError;
-use crate::api_response::{PublicKeysApiResponse, SignatureApiResponse};
+use crate::api_response::{KeysApiResponse, SignatureApiResponse};
 use crate::rest_api::Context;
 use client_backend::{BackendError, Storage};
 use hyper::Request;
@@ -13,20 +13,17 @@ lazy_static! {
 }
 
 /// HTTP handler to get the list of public keys in the backend.
-pub fn get_public_keys<T: Storage, U>(
-    _: U,
-    ctx: Arc<Context<T>>,
-) -> Result<PublicKeysApiResponse, ApiError> {
-    let public_keys = ctx
+pub fn get_keys<T: Storage, U>(_: U, ctx: Arc<Context<T>>) -> Result<KeysApiResponse, ApiError> {
+    let keys = ctx
         .backend
-        .get_public_keys()
+        .get_keys()
         .map_err(|e| ApiError::ServerError(format!("{}", e)))?;
 
-    if public_keys.is_empty() {
+    if keys.is_empty() {
         return Err(ApiError::NotFound("No keys found in storage.".to_string()));
     }
 
-    Ok(PublicKeysApiResponse { public_keys })
+    Ok(KeysApiResponse { keys })
 }
 
 /// HTTP handler to sign a message with the requested key.

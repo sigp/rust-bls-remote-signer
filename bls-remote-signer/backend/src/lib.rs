@@ -57,8 +57,8 @@ impl Backend<StorageRawDir> {
 
 impl<T: Storage> Backend<T> {
     /// Returns the available public keys in storage.
-    pub fn get_public_keys(&self) -> Result<Vec<String>, BackendError> {
-        self.storage.get_public_keys()
+    pub fn get_keys(&self) -> Result<Vec<String>, BackendError> {
+        self.storage.get_keys()
     }
 
     /// Signs the message with the requested key in storage.
@@ -115,7 +115,7 @@ pub mod tests_commons {
         log_builder.build().unwrap()
     }
 
-    pub fn new_backend_for_get_public_keys() -> (Backend<T>, TempDir) {
+    pub fn new_backend_for_get_keys() -> (Backend<T>, TempDir) {
         let tmp_dir = TempDir::new("bls-remote-signer-test").unwrap();
 
         let matches = set_matches(vec![
@@ -133,7 +133,7 @@ pub mod tests_commons {
     }
 
     pub fn new_backend_for_signing() -> (Backend<T>, TempDir) {
-        let (backend, tmp_dir) = new_backend_for_get_public_keys();
+        let (backend, tmp_dir) = new_backend_for_get_keys();
 
         // This one has the whole fauna.
         add_sub_dirs(&tmp_dir);
@@ -206,39 +206,39 @@ pub mod backend_new {
 
     #[test]
     fn happy_path() {
-        let (_backend, _tmp_dir) = new_backend_for_get_public_keys();
+        let (_backend, _tmp_dir) = new_backend_for_get_keys();
     }
 }
 
 #[cfg(test)]
-pub mod backend_raw_dir_get_public_keys {
+pub mod backend_raw_dir_get_keys {
     use crate::tests_commons::*;
     use helpers::*;
 
     #[test]
     fn empty_dir() {
-        let (backend, _tmp_dir) = new_backend_for_get_public_keys();
+        let (backend, _tmp_dir) = new_backend_for_get_keys();
 
-        assert_eq!(backend.get_public_keys().unwrap().len(), 0);
+        assert_eq!(backend.get_keys().unwrap().len(), 0);
     }
 
     #[test]
     fn some_files_are_not_public_keys() {
-        let (backend, tmp_dir) = new_backend_for_get_public_keys();
+        let (backend, tmp_dir) = new_backend_for_get_keys();
 
         add_sub_dirs(&tmp_dir);
         add_key_files(&tmp_dir);
         add_non_key_files(&tmp_dir);
 
-        assert_eq!(backend.get_public_keys().unwrap().len(), 3);
+        assert_eq!(backend.get_keys().unwrap().len(), 3);
     }
 
     #[test]
     fn all_files_are_public_keys() {
-        let (backend, tmp_dir) = new_backend_for_get_public_keys();
+        let (backend, tmp_dir) = new_backend_for_get_keys();
         add_key_files(&tmp_dir);
 
-        assert_eq!(backend.get_public_keys().unwrap().len(), 3);
+        assert_eq!(backend.get_keys().unwrap().len(), 3);
     }
 }
 

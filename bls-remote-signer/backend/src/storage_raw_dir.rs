@@ -37,12 +37,12 @@ impl StorageRawDir {
 impl Storage for StorageRawDir {
     /// List all the files in the directory having a BLS public key name.
     /// This function DOES NOT check the contents of each file.
-    fn get_public_keys(&self) -> Result<Vec<String>, BackendError> {
+    fn get_keys(&self) -> Result<Vec<String>, BackendError> {
         let entries = read_dir(&self.path).map_err(BackendError::from)?;
 
         // We are silently suppressing errors in this chain
         // because we only care about files actually passing these filters.
-        let public_keys: Vec<String> = entries
+        let keys: Vec<String> = entries
             .filter_map(|entry| entry.ok())
             .filter(|entry| !entry.path().is_dir())
             .map(|entry| entry.file_name().into_string())
@@ -50,7 +50,7 @@ impl Storage for StorageRawDir {
             .filter(|name| PUBLIC_KEY_REGEX.is_match(name))
             .collect();
 
-        Ok(public_keys)
+        Ok(keys)
     }
 
     /// Gets a requested secret key by their reference, its public key.
@@ -73,7 +73,7 @@ impl Storage for StorageRawDir {
 }
 
 #[cfg(test)]
-mod get_public_keys {
+mod get_keys {
     use crate::tests_commons::*;
     use helpers::*;
 
@@ -85,7 +85,7 @@ mod get_public_keys {
         // All good and fancy, let's make the dir innacessible now.
         set_permissions(tmp_dir.path(), 0o40311);
 
-        let result = storage.get_public_keys();
+        let result = storage.get_keys();
 
         // Give permissions back, we want the tempdir to be deleted.
         set_permissions(tmp_dir.path(), 0o40755);
@@ -100,7 +100,7 @@ mod get_public_keys {
     fn no_files_in_dir() {
         let (storage, _tmp_dir) = new_storage_with_tmp_dir();
 
-        assert_eq!(storage.get_public_keys().unwrap().len(), 0);
+        assert_eq!(storage.get_keys().unwrap().len(), 0);
     }
 
     #[test]
@@ -109,7 +109,7 @@ mod get_public_keys {
         add_sub_dirs(&tmp_dir);
         add_non_key_files(&tmp_dir);
 
-        assert_eq!(storage.get_public_keys().unwrap().len(), 0);
+        assert_eq!(storage.get_keys().unwrap().len(), 0);
     }
 
     #[test]
@@ -119,7 +119,7 @@ mod get_public_keys {
         add_key_files(&tmp_dir);
         add_non_key_files(&tmp_dir);
 
-        assert_eq!(storage.get_public_keys().unwrap().len(), 3);
+        assert_eq!(storage.get_keys().unwrap().len(), 3);
     }
 
     #[test]
@@ -127,7 +127,7 @@ mod get_public_keys {
         let (storage, tmp_dir) = new_storage_with_tmp_dir();
         add_key_files(&tmp_dir);
 
-        assert_eq!(storage.get_public_keys().unwrap().len(), 3);
+        assert_eq!(storage.get_keys().unwrap().len(), 3);
     }
 }
 

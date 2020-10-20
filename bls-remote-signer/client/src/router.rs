@@ -1,5 +1,5 @@
 use crate::api_error::ApiError;
-use crate::backend::{get_public_keys, sign_message};
+use crate::backend::{get_keys, sign_message};
 use crate::handler::Handler;
 use crate::rest_api::Context;
 use crate::upcheck::upcheck;
@@ -52,10 +52,7 @@ async fn route<T: Storage>(
     match (method, path.as_ref()) {
         (Method::GET, "/upcheck") => handler.static_value(upcheck()).await?.serde_encodings(),
 
-        (Method::GET, "/publicKeys") => handler
-            .in_blocking_task(get_public_keys)
-            .await?
-            .serde_encodings(),
+        (Method::GET, "/keys") => handler.in_blocking_task(get_keys).await?.serde_encodings(),
 
         (Method::POST, _) => route_post(&path, handler).await,
 

@@ -1,13 +1,13 @@
-mod get_public_keys {
-    use client::api_response::PublicKeysApiResponse;
+mod get_keys {
+    use client::api_response::KeysApiResponse;
     use helpers::*;
 
     fn assert_ok(resp: ApiTestResponse, expected_keys_len: usize) {
         assert_eq!(resp.status, 200);
         assert_eq!(
-            serde_json::from_value::<PublicKeysApiResponse>(resp.json)
+            serde_json::from_value::<KeysApiResponse>(resp.json)
                 .unwrap()
-                .public_keys
+                .keys
                 .len(),
             expected_keys_len
         );
@@ -23,7 +23,7 @@ mod get_public_keys {
         let (test_signer, tmp_dir) = set_up_api_test_signer_raw_dir();
         add_key_files(&tmp_dir);
 
-        let url = format!("{}/publicKeys", test_signer.address);
+        let url = format!("{}/keys", test_signer.address);
 
         let resp = http_get(&url);
         assert_ok(resp, 3);
@@ -38,7 +38,7 @@ mod get_public_keys {
         add_key_files(&tmp_dir);
         add_non_key_files(&tmp_dir);
 
-        let url = format!("{}/publicKeys", test_signer.address);
+        let url = format!("{}/keys", test_signer.address);
 
         let resp = http_get(&url);
         assert_ok(resp, 3);
@@ -52,7 +52,7 @@ mod get_public_keys {
         add_sub_dirs(&tmp_dir);
         add_non_key_files(&tmp_dir);
 
-        let url = format!("{}/publicKeys", test_signer.address);
+        let url = format!("{}/keys", test_signer.address);
 
         let resp = http_get(&url);
         assert_error(resp, 404, "No keys found in storage.");
@@ -70,7 +70,7 @@ mod get_public_keys {
         // Somebody tripped over a wire.
         set_permissions(tmp_dir.path(), 0o40311);
 
-        let url = format!("{}/publicKeys", test_signer.address);
+        let url = format!("{}/keys", test_signer.address);
 
         let resp = http_get(&url);
 
