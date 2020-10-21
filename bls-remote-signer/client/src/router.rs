@@ -8,10 +8,11 @@ use hyper::{Body, Method, Request, Response};
 use slog::debug;
 use std::sync::Arc;
 use std::time::Instant;
+use types::EthSpec;
 
-pub async fn on_http_request<T: Storage>(
+pub async fn on_http_request<E: EthSpec, S: Storage>(
     req: Request<Body>,
-    ctx: Arc<Context<T>>,
+    ctx: Arc<Context<E, S>>,
 ) -> Result<Response<Body>, ApiError> {
     let path = req.uri().path().to_string();
     let received_instant = Instant::now();
@@ -40,9 +41,9 @@ pub async fn on_http_request<T: Storage>(
     }
 }
 
-async fn route<T: Storage>(
+async fn route<E: EthSpec, S: Storage>(
     req: Request<Body>,
-    ctx: Arc<Context<T>>,
+    ctx: Arc<Context<E, S>>,
 ) -> Result<Response<Body>, ApiError> {
     let path = req.uri().path().to_string();
     let method = req.method().clone();
@@ -65,9 +66,9 @@ async fn route<T: Storage>(
 /// Responds to all the POST requests.
 ///
 /// Should be deprecated once a better routing library is used, such as `warp`
-async fn route_post<T: Storage>(
+async fn route_post<E: EthSpec, S: Storage>(
     path: &str,
-    handler: Handler<T>,
+    handler: Handler<E, S>,
 ) -> Result<Response<Body>, ApiError> {
     let mut path_segments = path[1..].trim_end_matches('/').split('/');
 

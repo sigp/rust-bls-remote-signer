@@ -20,29 +20,51 @@ use std::fs::{rename as FsRename, OpenOptions};
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::runtime::{Builder as RuntimeBuilder, Runtime};
+use types::{EthSpec, InteropEthSpec, MainnetEthSpec, MinimalEthSpec};
 
 const LOG_CHANNEL_SIZE: usize = 2048;
 
 /// Builds an `Environment`.
-pub struct EnvironmentBuilder {
+pub struct EnvironmentBuilder<E: EthSpec> {
     runtime: Option<Runtime>,
     log: Option<Logger>,
+    eth_spec_instance: E,
 }
 
-impl Default for EnvironmentBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl EnvironmentBuilder {
-    pub fn new() -> Self {
+impl EnvironmentBuilder<MinimalEthSpec> {
+    /// Creates a new builder using the `minimal` eth2 specification.
+    pub fn minimal() -> Self {
         Self {
             runtime: None,
             log: None,
+            eth_spec_instance: MinimalEthSpec,
         }
     }
+}
 
+impl EnvironmentBuilder<MainnetEthSpec> {
+    /// Creates a new builder using the `mainnet` eth2 specification.
+    pub fn mainnet() -> Self {
+        Self {
+            runtime: None,
+            log: None,
+            eth_spec_instance: MainnetEthSpec,
+        }
+    }
+}
+
+impl EnvironmentBuilder<InteropEthSpec> {
+    /// Creates a new builder using the `interop` eth2 specification.
+    pub fn interop() -> Self {
+        Self {
+            runtime: None,
+            log: None,
+            eth_spec_instance: InteropEthSpec,
+        }
+    }
+}
+
+impl<E: EthSpec> EnvironmentBuilder<E> {
     /// Specifies that all logs should be sent to `null` (i.e., ignored).
     pub fn null_logger(mut self) -> Result<Self, String> {
         let log_builder = NullLoggerBuilder;
@@ -186,7 +208,7 @@ impl EnvironmentBuilder {
     }
 
     /// Consumes the builder, returning an `Environment`.
-    pub fn build(self) -> Result<Environment, String> {
+    pub fn build(self) -> Result<Environment<E>, String> {
         let (signal, exit) = exit_future::signal();
         let (signal_tx, signal_rx) = channel(1);
         Ok(Environment {
@@ -197,6 +219,7 @@ impl EnvironmentBuilder {
             log: self
                 .log
                 .ok_or_else(|| "Cannot build environment without log".to_string())?,
+            eth_spec_instance: self.eth_spec_instance,
             signal_tx,
             signal_rx: Some(signal_rx),
             signal: Some(signal),
@@ -207,10 +230,10 @@ impl EnvironmentBuilder {
 
 /// An environment where the service can run. Used to start a production API
 /// or to run tests that involve logging and async task execution.
-pub struct Environment {
+pub struct Environment<E> {
     runtime: Runtime,
     log: Logger,
-
+    eth_spec_instance: E,
     /// Receiver side of an internal shutdown signal.
     signal_rx: Option<Receiver<&'static str>>,
     /// Sender to request shutting down.
@@ -219,7 +242,7 @@ pub struct Environment {
     exit: exit_future::Exit,
 }
 
-impl Environment {
+impl<E: EthSpec> Environment<E> {
     /// Returns a mutable reference to the `tokio` runtime.
     ///
     /// Useful in the rare scenarios where it's necessary to block the current thread until a task
@@ -229,7 +252,7 @@ impl Environment {
     }
 
     /// Returns a `Context` where no "service" has been added to the logger output.
-    pub fn core_context(&mut self) -> RuntimeContext {
+    pub fn core_context(&mut self) -> RuntimeContext<E> {
         RuntimeContext {
             executor: TaskExecutor {
                 exit: self.exit.clone(),
@@ -237,6 +260,7 @@ impl Environment {
                 handle: self.runtime().handle().clone(),
                 log: self.log.clone(),
             },
+            eth_spec_instance: self.eth_spec_instance.clone(),
         }
     }
 
@@ -290,11 +314,12 @@ impl Environment {
 /// Distinct from an `Environment` because a `Context` is not able to give a mutable reference to a
 /// `Runtime`, instead it only has access to a `Runtime`.
 #[derive(Clone)]
-pub struct RuntimeContext {
+pub struct RuntimeContext<E> {
     pub executor: TaskExecutor,
+    pub eth_spec_instance: E,
 }
 
-impl RuntimeContext {
+impl<E: EthSpec> RuntimeContext<E> {
     /// Returns a reference to the logger for this service.
     pub fn log(&self) -> &slog::Logger {
         self.executor.log()

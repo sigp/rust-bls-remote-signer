@@ -9,5 +9,7 @@ clap = "2.33.3"
 client = { path = "../../bls-remote-signer/client" }
 environment = { path = "../../bls-remote-signer/environment" }
 reqwest = { version = "0.10.8", features = ["blocking", "json"] }
+serde = { version = "1.0.116", features = ["derive"] }
 serde_json = "1.0.58"
 tempdir = "0.3.7"
+types = { git = "https://github.com/sigp/lighthouse", tag = "v0.3.0" }

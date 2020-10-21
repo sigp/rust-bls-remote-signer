@@ -1,19 +1,23 @@
 use crate::api_error::ApiError;
 use crate::api_response::{KeysApiResponse, SignatureApiResponse};
 use crate::rest_api::Context;
+use crate::signing_root::get_signing_root;
 use client_backend::{BackendError, Storage};
 use hyper::Request;
 use lazy_static::lazy_static;
 use regex::Regex;
-use serde_json::Value;
 use std::sync::Arc;
+use types::EthSpec;
 
 lazy_static! {
     static ref PUBLIC_KEY_FROM_PATH_REGEX: Regex = Regex::new(r"^/[^/]+/([^/]*)").unwrap();
 }
 
 /// HTTP handler to get the list of public keys in the backend.
-pub fn get_keys<T: Storage, U>(_: U, ctx: Arc<Context<T>>) -> Result<KeysApiResponse, ApiError> {
+pub fn get_keys<E: EthSpec, S: Storage, U>(
+    _: U,
+    ctx: Arc<Context<E, S>>,
+) -> Result<KeysApiResponse, ApiError> {
     let keys = ctx
         .backend
         .get_keys()
@@ -27,31 +31,17 @@ pub fn get_keys<T: Storage, U>(_: U, ctx: Arc<Context<T>>) -> Result<KeysApiResp
 }
 
 /// HTTP handler to sign a message with the requested key.
-pub fn sign_message<T: Storage>(
+pub fn sign_message<E: EthSpec, S: Storage>(
     req: Request<Vec<u8>>,
-    ctx: Arc<Context<T>>,
+    ctx: Arc<Context<E, S>>,
 ) -> Result<SignatureApiResponse, ApiError> {
-    let body: Value = serde_json::from_slice(req.body())
-        .map_err(|e| ApiError::BadRequest(format!("Unable to parse JSON: {:?}", e)))?;
+    // Parse the request body and compute the signing root.
+    let signing_root = get_signing_root::<E>(&req, ctx.spec.clone())?;
 
-    let signing_root = match &body["signingRoot"] {
-        Value::String(signing_root) => Ok(signing_root.to_string()),
-
-        Value::Null => Err(ApiError::BadRequest(
-            "Missing field signingRoot.".to_string(),
-        )),
-
-        _ => Err(ApiError::BadRequest(format!(
-            "Invalid field signingRoot: {}",
-            body["signingRoot"].to_string()
-        ))),
-    }?;
-
-    // The backend controls against empty signingRoot parameters.
-    // We can save us some cpu cycles, though, if we catch this earlier.
-    if signing_root == "" {
-        return Err(ApiError::BadRequest("Empty field signingRoot.".to_string()));
-    }
+    // TODO
+    // Refactor the backend to accept Hash256 instead of string
+    // Save yourself one decoding.
+    let signing_root: String = format!("0x{:x}", signing_root);
 
     // This public key parameter should have been validated by the router.
     // We are just going to extract it from the request.

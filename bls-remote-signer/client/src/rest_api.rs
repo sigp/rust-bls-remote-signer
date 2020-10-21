@@ -8,18 +8,22 @@ use hyper::{Body, Request, Server};
 use slog::{info, warn};
 use std::net::SocketAddr;
 use std::sync::Arc;
+use types::{ChainSpec, EthSpec};
 
-pub struct Context<T: Send + Sync> {
+pub struct Context<E: EthSpec, S: Send + Sync> {
     pub config: Config,
     pub executor: TaskExecutor,
     pub log: slog::Logger,
-    pub backend: Backend<T>,
+    pub backend: Backend<S>,
+    pub eth_spec_instance: E,
+    pub spec: ChainSpec,
 }
 
-pub fn start_server<T: Storage>(
+pub fn start_server<E: EthSpec, S: Storage>(
     executor: TaskExecutor,
     config: Config,
-    backend: Backend<T>,
+    backend: Backend<S>,
+    eth_spec_instance: E,
 ) -> Result<SocketAddr, hyper::Error> {
     let log = executor.log();
 
@@ -28,6 +32,8 @@ pub fn start_server<T: Storage>(
         log: log.clone(),
         config: config.clone(),
         backend,
+        eth_spec_instance,
+        spec: E::default_spec(),
     });
 
     // Define the function that will build the request handler.

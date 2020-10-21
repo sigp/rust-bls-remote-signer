@@ -3,18 +3,19 @@ use crate::rest_api::Context;
 use hyper::{Body, Request, Response, StatusCode};
 use serde::Serialize;
 use std::sync::Arc;
+use types::EthSpec;
 
 /// Provides a HTTP request handler with specific functionality.
-pub struct Handler<T: Send + Sync> {
+pub struct Handler<E: EthSpec, S: Send + Sync> {
     req: Request<()>,
     body: Body,
-    ctx: Arc<Context<T>>,
+    ctx: Arc<Context<E, S>>,
     allow_body: bool,
 }
 
-impl<T: 'static + Send + Sync> Handler<T> {
+impl<E: EthSpec, S: 'static + Send + Sync> Handler<E, S> {
     /// Start handling a new request.
-    pub fn new(req: Request<Body>, ctx: Arc<Context<T>>) -> Result<Self, ApiError> {
+    pub fn new(req: Request<Body>, ctx: Arc<Context<E, S>>) -> Result<Self, ApiError> {
         let (req_parts, body) = req.into_parts();
         let req = Request::from_parts(req_parts, ());
 
@@ -49,7 +50,7 @@ impl<T: 'static + Send + Sync> Handler<T> {
     pub async fn in_blocking_task<F, V>(self, func: F) -> Result<HandledRequest<V>, ApiError>
     where
         V: Send + Sync + 'static,
-        F: Fn(Request<Vec<u8>>, Arc<Context<T>>) -> Result<V, ApiError> + Send + Sync + 'static,
+        F: Fn(Request<Vec<u8>>, Arc<Context<E, S>>) -> Result<V, ApiError> + Send + Sync + 'static,
     {
         let ctx = self.ctx;
         let executor = ctx.executor.clone();

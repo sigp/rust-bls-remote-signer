@@ -4,6 +4,7 @@ use environment::EnvironmentBuilder;
 use slog::info;
 use std::path::PathBuf;
 use std::process::exit;
+use types::EthSpec;
 use version::VERSION;
 
 fn bls_library_name() -> &'static str {
@@ -36,6 +37,16 @@ fn main() {
                 bls_library_name()
             )
             .as_str(),
+        )
+        .arg(
+            Arg::with_name("spec")
+                .long("spec")
+                .value_name("TITLE")
+                .help("Specifies the default eth2 spec type.")
+                .takes_value(true)
+                .possible_values(&["mainnet", "minimal", "interop"])
+                .global(true)
+                .default_value("mainnet"),
         )
         .arg(
             Arg::with_name("storage-raw-dir")
@@ -86,7 +97,21 @@ fn main() {
         )
         .get_matches();
 
-    let result = run(&matches);
+    macro_rules! run_with_spec {
+        ($env_builder: expr) => {
+            run($env_builder, &matches)
+        };
+    }
+
+    let result = match matches.value_of("spec") {
+        Some("minimal") => run_with_spec!(EnvironmentBuilder::minimal()),
+        Some("mainnet") => run_with_spec!(EnvironmentBuilder::mainnet()),
+        Some("interop") => run_with_spec!(EnvironmentBuilder::interop()),
+        spec => {
+            // This path should be unreachable due to slog having a `default_value`
+            unreachable!("Unknown spec configuration: {:?}", spec);
+        }
+    };
 
     // `std::process::exit` does not run destructors so we drop manually.
     drop(matches);
@@ -102,14 +127,15 @@ fn main() {
     }
 }
 
-fn run(matches: &ArgMatches) -> Result<(), String> {
+fn run<E: EthSpec>(
+    environment_builder: EnvironmentBuilder<E>,
+    matches: &ArgMatches,
+) -> Result<(), String> {
     let debug_level = matches
         .value_of("debug-level")
         .ok_or_else(|| "Expected --debug-level flag".to_string())?;
 
     let log_format = matches.value_of("log-format");
-
-    let environment_builder = EnvironmentBuilder::new();
 
     let builder = if let Some(log_path) = matches.value_of("logfile") {
         let path = log_path

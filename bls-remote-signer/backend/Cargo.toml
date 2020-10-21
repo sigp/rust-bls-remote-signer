@@ -10,7 +10,7 @@ sloggers = "1.0.1"
 tempdir = "0.3.7"
 
 [dependencies]
-bls = { git = "https://github.com/sigp/lighthouse", tag = "v0.2.13" }
+bls = { git = "https://github.com/sigp/lighthouse", tag = "v0.3.0" }
 clap = "2.33.3"
 ethereum-types = "0.9.2"
 hex = "0.4.2"

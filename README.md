@@ -36,17 +36,20 @@ Content | `{"keys": "[identifier]"}`
 
 ---
 
-### `POST /sign/:public_key`
+### `POST /sign/:identifier`
 
 URL Parameter | <br>
 --- | ---
-`:public_key` | `public_key_hex_string_without_0x`
+`:identifier` | `public_key_hex_string_without_0x`
 
 _**Request**_
 
 JSON Body | <br> | <br>
 --- | --- | ---
-`signingRoot` | **Required** | A string representation of the hexadecimal value to be signed
+`bls_domain` | **Required** | The BLS Signature domain.<br>As defined in the [specification](https://github.com/ethereum/eth2.0-specs/blob/dev/specs/phase0/beacon-chain.md#domain-types), in lowercase, omitting the `domain` prefix.<br>Supporting `beacon_proposer`, `beacon_attester`, and `randao`.
+`data` | **Required** | The data to be signed.<br>As defined in the specifications for [block](https://github.com/ethereum/eth2.0-APIs/blob/master/types/block.yaml), [attestation](https://github.com/ethereum/eth2.0-APIs/blob/master/types/attestation.yaml), and [epoch](https://github.com/ethereum/eth2.0-APIs/blob/master/types/misc.yaml).
+`fork` | **Required** | A `Fork` object containing previous and current versions.<br>As defined in the [specification](https://github.com/ethereum/eth2.0-APIs/blob/master/types/misc.yaml)
+`genesis_validators_root` | **Required** | A `Hash256` for domain separation and chain versioning.
 <br> | Optional | Any other field will be ignored by the signer
 
 _**Responses**_
@@ -68,7 +71,7 @@ _or_
 Error | <br>
 --- | ---
 Code |  `404`
-Content | `{"error": "Key not found: <public_key_hex_string_without_0x>"}`
+Content | `{"error": "Key not found: <identifier>"}`
 
 ## Build instructions
 
@@ -96,7 +99,7 @@ make test
 
 ```
 USAGE:
-    bls-remote-signer [OPTIONS]
+    bls_remote_signer [OPTIONS]
 
 FLAGS:
     -h, --help       Prints help information
@@ -109,14 +112,16 @@ OPTIONS:
         --log-format <FORMAT>         Specifies the format used for logging. [possible values: JSON]
         --logfile <FILE>              File path where output will be written.
         --port <PORT>                 The TCP port to listen on. [default: 9000]
+        --spec <TITLE>                Specifies the default eth2 spec type. [default: mainnet]  [possible values:
+                                      mainnet, minimal, interop]
         --storage-raw-dir <DIR>       Data directory for secret keys in raw files.
 ```
 
-## TODO
+## Implementation Tracking
 
 Please, check this repository's issue for the [Implementation Tracking](https://github.com/sigp/rust-bls-remote-signer/issues/1)
 
-## Wishlist / Roadmap
+## Roadmap
 
 - [ ] EIP standard compliant
 - [ ] Support EIP-2335, BLS12-381 keystore
