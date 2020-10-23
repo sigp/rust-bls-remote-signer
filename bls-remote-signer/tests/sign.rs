@@ -239,7 +239,7 @@ mod sign {
         let test_block_body =
             get_test_block_body(0xc137).replace("\"bls_domain\":\"beacon_proposer\",", "");
         let response = http_post_custom_body(&url, &test_block_body);
-        assert_sign_error(response, 400, "Unable to parse body message from JSON: Error(\"missing field `bls_domain`\", line: 1, column: 236311)");
+        assert_sign_error(response, 400, "Unable to parse body message from JSON: Error(\"missing field `bls_domain`\", line: 1, column: 237203)");
 
         test_signer.shutdown();
     }
@@ -251,7 +251,7 @@ mod sign {
 
         let testcase = |json_patch, expected_err| {
             let test_block_body = get_test_block_body(0xc137).replace(
-                "\"fork\":{\"previous_version\":\"0x01010101\",\"current_version\":\"0x02020202\",\"epoch\":1545},",
+                "\"fork\":{\"previous_version\":\"0x01010101\",\"current_version\":\"0x02020202\",\"epoch\":\"1545\"},",
                 json_patch,
             );
 
@@ -260,56 +260,56 @@ mod sign {
         };
 
         testcase(
-            "\"fork\":{\"current_version\":\"0x02020202\",\"epoch\":1545},",
-            "Unable to parse body message from JSON: Error(\"missing field `previous_version`\", line: 1, column: 236214)",
+            "\"fork\":{\"current_version\":\"0x02020202\",\"epoch\":\"1545\"},",
+            "Unable to parse body message from JSON: Error(\"missing field `previous_version`\", line: 1, column: 237106)",
         );
         testcase(
-            "\"fork\":{\"previous_version\":\"0x01010101\",\"epoch\":1545},",
-            "Unable to parse body message from JSON: Error(\"missing field `current_version`\", line: 1, column: 236215)",
+            "\"fork\":{\"previous_version\":\"0x01010101\",\"epoch\":\"1545\"},",
+            "Unable to parse body message from JSON: Error(\"missing field `current_version`\", line: 1, column: 237107)",
         );
         testcase(
             "\"fork\":{\"previous_version\":\"0x01010101\",\"current_version\":\"0x02020202\",",
-            "Unable to parse body message from JSON: Error(\"missing field `epoch`\", line: 1, column: 236328)",
+            "Unable to parse body message from JSON: Error(\"missing field `epoch`\", line: 1, column: 237218)",
         );
         testcase(
-            "\"fork\":{\"previous_version\":\"INVALID_VALUE\",\"current_version\":\"0x02020202\",\"epoch\":1545},",
-            "Unable to parse body message from JSON: Error(\"missing 0x prefix\", line: 1, column: 236204)",
+            "\"fork\":{\"previous_version\":\"INVALID_VALUE\",\"current_version\":\"0x02020202\",\"epoch\":\"1545\"},",
+            "Unable to parse body message from JSON: Error(\"missing 0x prefix\", line: 1, column: 237094)",
         );
         testcase(
-            "\"fork\":{\"previous_version\":\"0xINVALID_VALUE\",\"current_version\":\"0x02020202\",\"epoch\":1545},",
-            "Unable to parse body message from JSON: Error(\"invalid hex (OddLength)\", line: 1, column: 236206)",
+            "\"fork\":{\"previous_version\":\"0xINVALID_VALUE\",\"current_version\":\"0x02020202\",\"epoch\":\"1545\"},",
+            "Unable to parse body message from JSON: Error(\"invalid hex (OddLength)\", line: 1, column: 237096)",
         );
         testcase(
-            "\"fork\":{\"previous_version\":\"0xINVALID_VALUE_\",\"current_version\":\"0x02020202\",\"epoch\":1545},",
-            "Unable to parse body message from JSON: Error(\"invalid hex (InvalidHexCharacter { c: \\\'I\\\', index: 0 })\", line: 1, column: 236207)",
+            "\"fork\":{\"previous_version\":\"0xINVALID_VALUE_\",\"current_version\":\"0x02020202\",\"epoch\":\"1545\"},",
+            "Unable to parse body message from JSON: Error(\"invalid hex (InvalidHexCharacter { c: \\\'I\\\', index: 0 })\", line: 1, column: 237097)",
         );
         testcase(
-            "\"fork\":{\"previous_version\":\"0x01010101\",\"current_version\":\"INVALID_VALUE\",\"epoch\":1545},",
-            "Unable to parse body message from JSON: Error(\"missing 0x prefix\", line: 1, column: 236235)"
+            "\"fork\":{\"previous_version\":\"0x01010101\",\"current_version\":\"INVALID_VALUE\",\"epoch\":\"1545\"},",
+            "Unable to parse body message from JSON: Error(\"missing 0x prefix\", line: 1, column: 237125)"
         );
         testcase(
-            "\"fork\":{\"previous_version\":\"0x01010101\",\"current_version\":\"0xINVALID_VALUE\",\"epoch\":1545},",
-            "Unable to parse body message from JSON: Error(\"invalid hex (OddLength)\", line: 1, column: 236237)"
+            "\"fork\":{\"previous_version\":\"0x01010101\",\"current_version\":\"0xINVALID_VALUE\",\"epoch\":\"1545\"},",
+            "Unable to parse body message from JSON: Error(\"invalid hex (OddLength)\", line: 1, column: 237127)"
         );
         testcase(
-            "\"fork\":{\"previous_version\":\"0x01010101\",\"current_version\":\"0xINVALID_VALUE_\",\"epoch\":1545},",
-            "Unable to parse body message from JSON: Error(\"invalid hex (InvalidHexCharacter { c: \\\'I\\\', index: 0 })\", line: 1, column: 236238)"
+            "\"fork\":{\"previous_version\":\"0x01010101\",\"current_version\":\"0xINVALID_VALUE_\",\"epoch\":\"1545\"},",
+            "Unable to parse body message from JSON: Error(\"invalid hex (InvalidHexCharacter { c: \\\'I\\\', index: 0 })\", line: 1, column: 237128)"
         );
         testcase(
             "\"fork\":{\"previous_version\":\"0x01010101\",\"current_version\":\"0x02020202\",\"epoch\":},",
-            "Unable to parse body message from JSON: Error(\"expected value\", line: 1, column: 236242)"
+            "Unable to parse body message from JSON: Error(\"expected value\", line: 1, column: 237132)"
         );
         testcase(
             "\"fork\":{\"previous_version\":\"0x01010101\",\"current_version\":\"0x02020202\",\"epoch\":\"zzz\"},",
-            "Unable to parse body message from JSON: Error(\"invalid type: string \\\"zzz\\\", expected u64\", line: 1, column: 236246)"
+            "Unable to parse body message from JSON: Error(\"invalid digit found in string\", line: 1, column: 237136)"
         );
         testcase(
             "\"fork\":{\"previous_version\":\"0x01010101\",\"current_version\":\"0x02020202\",\"epoch\":true},",
-            "Unable to parse body message from JSON: Error(\"invalid type: boolean `true`, expected u64\", line: 1, column: 236245)"
+            "Unable to parse body message from JSON: Error(\"invalid type: boolean `true`, expected a quoted or unquoted integer\", line: 1, column: 237135)"
         );
         testcase(
             "\"fork\":{\"previous_version\":\"0x01010101\",\"current_version\":\"0x02020202\",\"epoch\":[\"a\"]},",
-            "Unable to parse body message from JSON: Error(\"invalid type: sequence, expected u64\", line: 1, column: 236241)"
+            "Unable to parse body message from JSON: Error(\"invalid type: sequence, expected a quoted or unquoted integer\", line: 1, column: 237132)"
         );
 
         test_signer.shutdown();
@@ -321,11 +321,11 @@ mod sign {
         let url = format!("{}/sign/{}", test_signer.address, PUBLIC_KEY_1);
 
         let test_block_body = get_test_block_body(0xc137).replace(
-            "\"fork\":{\"previous_version\":\"0x01010101\",\"current_version\":\"0x02020202\",\"epoch\":1545},",
+            "\"fork\":{\"previous_version\":\"0x01010101\",\"current_version\":\"0x02020202\",\"epoch\":\"1545\"},",
             "",
         );
         let response = http_post_custom_body(&url, &test_block_body);
-        assert_sign_error(response, 400, "Unable to parse body message from JSON: Error(\"missing field `fork`\", line: 1, column: 236257)");
+        assert_sign_error(response, 400, "Unable to parse body message from JSON: Error(\"missing field `fork`\", line: 1, column: 237147)");
 
         test_signer.shutdown();
     }
@@ -338,7 +338,7 @@ mod sign {
         let test_block_body = get_test_block_body(0xc137).replace("\"data\":", "\"not-data\":");
 
         let response = http_post_custom_body(&url, &test_block_body);
-        assert_sign_error(response, 400, "Unable to parse body message from JSON: Error(\"missing field `data`\", line: 1, column: 236938)");
+        assert_sign_error(response, 400, "Unable to parse body message from JSON: Error(\"missing field `data`\", line: 1, column: 237830)");
 
         test_signer.shutdown();
     }
@@ -358,28 +358,28 @@ mod sign {
             assert_sign_error(response, 400, expected_err);
         };
 
-        testcase("\"0\"", "Unable to parse body message from JSON: Error(\"0x prefix is missing\", line: 1, column: 236276)");
-        testcase("\"0x\"", "Unable to parse body message from JSON: Error(\"invalid length 0, expected a 0x-prefixed hex string with length of 64\", line: 1, column: 236277)");
-        testcase("\"0xa\"", "Unable to parse body message from JSON: Error(\"invalid length 1, expected a 0x-prefixed hex string with length of 64\", line: 1, column: 236278)");
-        testcase("\"deadbeef\"", "Unable to parse body message from JSON: Error(\"0x prefix is missing\", line: 1, column: 236283)");
-        testcase("\"0xdeadbeefzz\"", "Unable to parse body message from JSON: Error(\"invalid length 10, expected a 0x-prefixed hex string with length of 64\", line: 1, column: 236287)");
-        testcase("\"0xdeadbeef1\"", "Unable to parse body message from JSON: Error(\"invalid length 9, expected a 0x-prefixed hex string with length of 64\", line: 1, column: 236286)");
-        testcase("", "Unable to parse body message from JSON: Error(\"expected value\", line: 1, column: 236274)");
-        testcase("1", "Unable to parse body message from JSON: Error(\"invalid type: integer `1`, expected a 0x-prefixed hex string with length of 64\", line: 1, column: 236274)");
-        testcase("true", "Unable to parse body message from JSON: Error(\"invalid type: boolean `true`, expected a 0x-prefixed hex string with length of 64\", line: 1, column: 236277)");
-        testcase("{\"cats\":\"3\"}", "Unable to parse body message from JSON: Error(\"invalid type: map, expected a 0x-prefixed hex string with length of 64\", line: 1, column: 236273)");
-        testcase("[\"a\"]", "Unable to parse body message from JSON: Error(\"invalid type: sequence, expected a 0x-prefixed hex string with length of 64\", line: 1, column: 236273)");
+        testcase("\"0\"", "Unable to parse body message from JSON: Error(\"0x prefix is missing\", line: 1, column: 237168)");
+        testcase("\"0x\"", "Unable to parse body message from JSON: Error(\"invalid length 0, expected a 0x-prefixed hex string with length of 64\", line: 1, column: 237169)");
+        testcase("\"0xa\"", "Unable to parse body message from JSON: Error(\"invalid length 1, expected a 0x-prefixed hex string with length of 64\", line: 1, column: 237170)");
+        testcase("\"deadbeef\"", "Unable to parse body message from JSON: Error(\"0x prefix is missing\", line: 1, column: 237175)");
+        testcase("\"0xdeadbeefzz\"", "Unable to parse body message from JSON: Error(\"invalid length 10, expected a 0x-prefixed hex string with length of 64\", line: 1, column: 237179)");
+        testcase("\"0xdeadbeef1\"", "Unable to parse body message from JSON: Error(\"invalid length 9, expected a 0x-prefixed hex string with length of 64\", line: 1, column: 237178)");
+        testcase("", "Unable to parse body message from JSON: Error(\"expected value\", line: 1, column: 237166)");
+        testcase("1", "Unable to parse body message from JSON: Error(\"invalid type: integer `1`, expected a 0x-prefixed hex string with length of 64\", line: 1, column: 237166)");
+        testcase("true", "Unable to parse body message from JSON: Error(\"invalid type: boolean `true`, expected a 0x-prefixed hex string with length of 64\", line: 1, column: 237169)");
+        testcase("{\"cats\":\"3\"}", "Unable to parse body message from JSON: Error(\"invalid type: map, expected a 0x-prefixed hex string with length of 64\", line: 1, column: 237165)");
+        testcase("[\"a\"]", "Unable to parse body message from JSON: Error(\"invalid type: sequence, expected a 0x-prefixed hex string with length of 64\", line: 1, column: 237165)");
         testcase(
             "\"0x000000000000000000000000000000000000000000000000000000000000c1370\"",
-            "Unable to parse body message from JSON: Error(\"invalid length 65, expected a 0x-prefixed hex string with length of 64\", line: 1, column: 236342)",
+            "Unable to parse body message from JSON: Error(\"invalid length 65, expected a 0x-prefixed hex string with length of 64\", line: 1, column: 237234)",
         );
         testcase(
             "\"0x000000000000000000000000000000000000000000000000000000000000c13700\"",
-            "Unable to parse body message from JSON: Error(\"invalid length 66, expected a 0x-prefixed hex string with length of 64\", line: 1, column: 236343)",
+            "Unable to parse body message from JSON: Error(\"invalid length 66, expected a 0x-prefixed hex string with length of 64\", line: 1, column: 237235)",
         );
         testcase(
             "\"0x000000000000000000000000000000000000000000000000000000000000c1370000\"",
-            "Unable to parse body message from JSON: Error(\"invalid length 68, expected a 0x-prefixed hex string with length of 64\", line: 1, column: 236345)",
+            "Unable to parse body message from JSON: Error(\"invalid length 68, expected a 0x-prefixed hex string with length of 64\", line: 1, column: 237237)",
         );
 
         test_signer.shutdown();
@@ -395,7 +395,7 @@ mod sign {
             "",
         );
         let response = http_post_custom_body(&url, &test_block_body);
-        assert_sign_error(response, 400, "Unable to parse body message from JSON: Error(\"missing field `genesis_validators_root`\", line: 1, column: 236247)");
+        assert_sign_error(response, 400, "Unable to parse body message from JSON: Error(\"missing field `genesis_validators_root`\", line: 1, column: 237139)");
 
         test_signer.shutdown();
     }

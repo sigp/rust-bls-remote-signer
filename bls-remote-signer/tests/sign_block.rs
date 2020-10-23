@@ -32,7 +32,10 @@ mod sign_block {
             "\"beacon_attester\"",
             "Unable to parse attestation from JSON: Error(\"missing field `index`\", line: 0, column: 0)",
         );
-        testcase("\"randao\"", "Unable to parse epoch from JSON: Got {\"body\":{\"attestations\":[{\"aggregation_bits\":\"0x00...");
+        testcase(
+            "\"randao\"",
+            "Unable to parse attestation from JSON: Error(\"invalid type: map, expected a quoted or unquoted integer\", line: 0, column: 0)"
+        );
         testcase("\"blah\"", "Unsupported bls_domain parameter: blah");
 
         test_signer.shutdown();
@@ -45,7 +48,7 @@ mod sign_block {
 
         let testcase = |json_patch, expected_err| {
             let test_block_body = get_test_block_body(0xc137).replace(
-                "\"data\":{\"slot\":49463,\"proposer_index\":\"0\"",
+                "\"data\":{\"slot\":\"49463\",\"proposer_index\":\"0\"",
                 json_patch,
             );
             let response = http_post_custom_body(&url, &test_block_body);
@@ -53,27 +56,23 @@ mod sign_block {
         };
 
         testcase(
-            "\"data\":{\"slot\":\"a\",\"proposer_index\":\"0\"",
-            "Unable to parse block from JSON: Error(\"invalid type: string \\\"a\\\", expected u64\", line: 0, column: 0)"
-        );
-        testcase(
             "\"data\":{\"slot\":\"\",\"proposer_index\":\"0\"",
-            "Unable to parse block from JSON: Error(\"invalid type: string \\\"\\\", expected u64\", line: 0, column: 0)"
+            "Unable to parse block from JSON: Error(\"cannot parse integer from empty string\", line: 0, column: 0)"
         );
         testcase(
-            "\"data\":{\"slot\":-1,\"proposer_index\":\"0\"",
-            "Unable to parse block from JSON: Error(\"invalid value: integer `-1`, expected u64\", line: 0, column: 0)"
+            "\"data\":{\"slot\":\"-1\",\"proposer_index\":\"0\"",
+            "Unable to parse block from JSON: Error(\"invalid digit found in string\", line: 0, column: 0)"
         );
         testcase(
             "\"data\":{\"proposer_index\":\"0\"",
             "Unable to parse block from JSON: Error(\"missing field `slot`\", line: 0, column: 0)",
         );
         testcase(
-            "\"data\":{\"slot\":49463",
+            "\"data\":{\"slot\":\"49463\"",
             "Unable to parse block from JSON: Error(\"missing field `proposer_index`\", line: 0, column: 0)"
         );
         testcase(
-            "\"data\":{\"slot\":49463,\"proposer_index\":\"\"",
+            "\"data\":{\"slot\":\"49463\",\"proposer_index\":\"\"",
             "Unable to parse block from JSON: Error(\"cannot parse integer from empty string\", line: 0, column: 0)",
         );
 

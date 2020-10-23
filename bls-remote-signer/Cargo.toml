@@ -15,11 +15,11 @@ client_backend = { path = "./backend", package = "backend"  }
 helpers = { path = "../testing/helpers", package = "helpers"  }
 
 [dependencies]
-bls = { git = "https://github.com/sigp/lighthouse", tag = "v0.3.0" }
+bls = { git = "https://github.com/sigp/lighthouse", rev = "83ae12a1b4719f073ccc3db473ac3a05cf51ac54" }
 clap = "2.33.3"
 client = { path = "./client" }
 environment = { path = "./environment" }
 serde_json = "1.0.58"
 slog = { version = "2.5.2", features = ["max_level_trace"] }
-types = { git = "https://github.com/sigp/lighthouse", tag = "v0.3.0" }
+types = { git = "https://github.com/sigp/lighthouse", rev = "83ae12a1b4719f073ccc3db473ac3a05cf51ac54"}
 version = { path = "./version" }

@@ -14,4 +14,4 @@ slog-json = "2.3.0"
 slog-term = "2.6.0"
 sloggers = "1.0.1"
 tokio = { version = "0.2.22", features = ["macros", "rt-threaded"] }
-types = { git = "https://github.com/sigp/lighthouse", tag = "v0.3.0" }
+types = { git = "https://github.com/sigp/lighthouse", rev = "83ae12a1b4719f073ccc3db473ac3a05cf51ac54" }

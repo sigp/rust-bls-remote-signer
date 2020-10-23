@@ -63,17 +63,9 @@ pub fn get_signing_root<E: EthSpec>(
         }
 
         "randao" => {
-            let epoch = Epoch::new(match body.data.as_u64() {
-                Some(n) => Ok(n),
-                None => {
-                    let body_data = body.data.to_string();
-                    Err(ApiError::BadRequest(format!(
-                        "Unable to parse epoch from JSON: Got {0:.50}{1}",
-                        body_data,
-                        if body_data.len() > 50 { "..." } else { "" }
-                    )))
-                }
-            }?);
+            let epoch = from_value::<Epoch>(body.data.clone()).map_err(|e| {
+                ApiError::BadRequest(format!("Unable to parse attestation from JSON: {:?}", e))
+            })?;
 
             Ok(epoch.signing_root(get_domain(epoch, Domain::Randao)))
         }

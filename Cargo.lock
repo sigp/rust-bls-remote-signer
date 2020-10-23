@@ -136,7 +136,7 @@ dependencies = [
 [[package]]
 name = "bls"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse?tag=v0.3.0#b185d7bbd84deade495dbb5de4a57ff42d544194"
+source = "git+https://github.com/sigp/lighthouse?rev=83ae12a1b4719f073ccc3db473ac3a05cf51ac54#83ae12a1b4719f073ccc3db473ac3a05cf51ac54"
 dependencies = [
  "blst",
  "eth2_hashing",
@@ -205,7 +205,7 @@ checksum = "0e4cec68f03f32e44924783795810fa50a7035d8c8ebe78580ad7e6c703fba38"
 [[package]]
 name = "cached_tree_hash"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse?tag=v0.3.0#b185d7bbd84deade495dbb5de4a57ff42d544194"
+source = "git+https://github.com/sigp/lighthouse?rev=83ae12a1b4719f073ccc3db473ac3a05cf51ac54#83ae12a1b4719f073ccc3db473ac3a05cf51ac54"
 dependencies = [
  "eth2_hashing",
  "eth2_ssz",
@@ -276,12 +276,12 @@ dependencies = [
 [[package]]
 name = "compare_fields"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse?tag=v0.3.0#b185d7bbd84deade495dbb5de4a57ff42d544194"
+source = "git+https://github.com/sigp/lighthouse?rev=83ae12a1b4719f073ccc3db473ac3a05cf51ac54#83ae12a1b4719f073ccc3db473ac3a05cf51ac54"
 
 [[package]]
 name = "compare_fields_derive"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse?tag=v0.3.0#b185d7bbd84deade495dbb5de4a57ff42d544194"
+source = "git+https://github.com/sigp/lighthouse?rev=83ae12a1b4719f073ccc3db473ac3a05cf51ac54#83ae12a1b4719f073ccc3db473ac3a05cf51ac54"
 dependencies = [
  "quote",
  "syn",
@@ -493,7 +493,7 @@ dependencies = [
 [[package]]
 name = "eth2_hashing"
 version = "0.1.1"
-source = "git+https://github.com/sigp/lighthouse?tag=v0.3.0#b185d7bbd84deade495dbb5de4a57ff42d544194"
+source = "git+https://github.com/sigp/lighthouse?rev=83ae12a1b4719f073ccc3db473ac3a05cf51ac54#83ae12a1b4719f073ccc3db473ac3a05cf51ac54"
 dependencies = [
  "lazy_static",
  "ring",
@@ -503,7 +503,7 @@ dependencies = [
 [[package]]
 name = "eth2_interop_keypairs"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse?tag=v0.3.0#b185d7bbd84deade495dbb5de4a57ff42d544194"
+source = "git+https://github.com/sigp/lighthouse?rev=83ae12a1b4719f073ccc3db473ac3a05cf51ac54#83ae12a1b4719f073ccc3db473ac3a05cf51ac54"
 dependencies = [
  "bls",
  "eth2_hashing",
@@ -518,7 +518,7 @@ dependencies = [
 [[package]]
 name = "eth2_ssz"
 version = "0.1.2"
-source = "git+https://github.com/sigp/lighthouse?tag=v0.3.0#b185d7bbd84deade495dbb5de4a57ff42d544194"
+source = "git+https://github.com/sigp/lighthouse?rev=83ae12a1b4719f073ccc3db473ac3a05cf51ac54#83ae12a1b4719f073ccc3db473ac3a05cf51ac54"
 dependencies = [
  "ethereum-types",
  "smallvec",
@@ -527,7 +527,7 @@ dependencies = [
 [[package]]
 name = "eth2_ssz_derive"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse?tag=v0.3.0#b185d7bbd84deade495dbb5de4a57ff42d544194"
+source = "git+https://github.com/sigp/lighthouse?rev=83ae12a1b4719f073ccc3db473ac3a05cf51ac54#83ae12a1b4719f073ccc3db473ac3a05cf51ac54"
 dependencies = [
  "quote",
  "syn",
@@ -536,7 +536,7 @@ dependencies = [
 [[package]]
 name = "eth2_ssz_types"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse?tag=v0.3.0#b185d7bbd84deade495dbb5de4a57ff42d544194"
+source = "git+https://github.com/sigp/lighthouse?rev=83ae12a1b4719f073ccc3db473ac3a05cf51ac54#83ae12a1b4719f073ccc3db473ac3a05cf51ac54"
 dependencies = [
  "eth2_ssz",
  "serde",
@@ -986,7 +986,7 @@ dependencies = [
 [[package]]
 name = "int_to_bytes"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse?tag=v0.3.0#b185d7bbd84deade495dbb5de4a57ff42d544194"
+source = "git+https://github.com/sigp/lighthouse?rev=83ae12a1b4719f073ccc3db473ac3a05cf51ac54#83ae12a1b4719f073ccc3db473ac3a05cf51ac54"
 dependencies = [
  "bytes",
 ]
@@ -1117,7 +1117,7 @@ dependencies = [
 [[package]]
 name = "merkle_proof"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse?tag=v0.3.0#b185d7bbd84deade495dbb5de4a57ff42d544194"
+source = "git+https://github.com/sigp/lighthouse?rev=83ae12a1b4719f073ccc3db473ac3a05cf51ac54#83ae12a1b4719f073ccc3db473ac3a05cf51ac54"
 dependencies = [
  "eth2_hashing",
  "ethereum-types",
@@ -1685,7 +1685,7 @@ checksum = "71d301d4193d031abdd79ff7e3dd721168a9572ef3fe51a1517aba235bd8f86e"
 [[package]]
 name = "safe_arith"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse?tag=v0.3.0#b185d7bbd84deade495dbb5de4a57ff42d544194"
+source = "git+https://github.com/sigp/lighthouse?rev=83ae12a1b4719f073ccc3db473ac3a05cf51ac54#83ae12a1b4719f073ccc3db473ac3a05cf51ac54"
 
 [[package]]
 name = "schannel"
@@ -1772,7 +1772,7 @@ dependencies = [
 [[package]]
 name = "serde_utils"
 version = "0.1.0"
-source = "git+https://github.com/sigp/lighthouse?tag=v0.3.0#b185d7bbd84deade495dbb5de4a57ff42d544194"
+source = "git+https://github.com/sigp/lighthouse?rev=83ae12a1b4719f073ccc3db473ac3a05cf51ac54#83ae12a1b4719f073ccc3db473ac3a05cf51ac54"
 dependencies = [
  "hex 0.4.2",
  "serde",
@@ -1944,7 +1944,7 @@ checksum = "8ea5119cdb4c55b55d432abb513a0429384878c15dde60cc77b1c99de1a95a6a"
 [[package]]
 name = "swap_or_not_shuffle"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse?tag=v0.3.0#b185d7bbd84deade495dbb5de4a57ff42d544194"
+source = "git+https://github.com/sigp/lighthouse?rev=83ae12a1b4719f073ccc3db473ac3a05cf51ac54#83ae12a1b4719f073ccc3db473ac3a05cf51ac54"
 dependencies = [
  "eth2_hashing",
  "ethereum-types",
@@ -2022,7 +2022,7 @@ dependencies = [
 [[package]]
 name = "test_random_derive"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse?tag=v0.3.0#b185d7bbd84deade495dbb5de4a57ff42d544194"
+source = "git+https://github.com/sigp/lighthouse?rev=83ae12a1b4719f073ccc3db473ac3a05cf51ac54#83ae12a1b4719f073ccc3db473ac3a05cf51ac54"
 dependencies = [
  "quote",
  "syn",
@@ -2184,7 +2184,7 @@ dependencies = [
 [[package]]
 name = "tree_hash"
 version = "0.1.1"
-source = "git+https://github.com/sigp/lighthouse?tag=v0.3.0#b185d7bbd84deade495dbb5de4a57ff42d544194"
+source = "git+https://github.com/sigp/lighthouse?rev=83ae12a1b4719f073ccc3db473ac3a05cf51ac54#83ae12a1b4719f073ccc3db473ac3a05cf51ac54"
 dependencies = [
  "eth2_hashing",
  "ethereum-types",
@@ -2194,7 +2194,7 @@ dependencies = [
 [[package]]
 name = "tree_hash_derive"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse?tag=v0.3.0#b185d7bbd84deade495dbb5de4a57ff42d544194"
+source = "git+https://github.com/sigp/lighthouse?rev=83ae12a1b4719f073ccc3db473ac3a05cf51ac54#83ae12a1b4719f073ccc3db473ac3a05cf51ac54"
 dependencies = [
  "quote",
  "syn",
@@ -2215,7 +2215,7 @@ checksum = "373c8a200f9e67a0c95e62a4f52fbf80c23b4381c05a17845531982fa99e6b33"
 [[package]]
 name = "types"
 version = "0.2.0"
-source = "git+https://github.com/sigp/lighthouse?tag=v0.3.0#b185d7bbd84deade495dbb5de4a57ff42d544194"
+source = "git+https://github.com/sigp/lighthouse?rev=83ae12a1b4719f073ccc3db473ac3a05cf51ac54#83ae12a1b4719f073ccc3db473ac3a05cf51ac54"
 dependencies = [
  "bls",
  "cached_tree_hash",
