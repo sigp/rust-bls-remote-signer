@@ -8,13 +8,12 @@ use crate::zeroize_string::ZeroizeString;
 use bls::SecretKey;
 use clap::ArgMatches;
 pub use error::BackendError;
-use ethereum_types::H256;
-use hex::decode;
 use lazy_static::lazy_static;
 use regex::Regex;
 use slog::{info, Logger};
 pub use storage::Storage;
 use storage_raw_dir::StorageRawDir;
+use types::Hash256;
 use utils::{bytes96_to_hex_string, validate_bls_pair};
 
 lazy_static! {
@@ -62,30 +61,19 @@ impl<T: Storage> Backend<T> {
     }
 
     /// Signs the message with the requested key in storage.
-    /// The unix way: Inputs and outputs are strings.
     pub fn sign_message(
         &self,
         public_key: &str,
-        signing_root: &str,
+        signing_root: Hash256,
     ) -> Result<String, BackendError> {
         if !PUBLIC_KEY_REGEX.is_match(public_key) || public_key.len() != 96 {
             return Err(BackendError::InvalidPublicKey(public_key.to_string()));
         }
 
-        if signing_root.len() < 4 || !signing_root.starts_with("0x") {
-            return Err(BackendError::InvalidSigningRoot(format!(
-                "{}; Value should be a non-empty hexadecimal starting with 0x.",
-                signing_root
-            )));
-        }
-
-        let signing_root: Vec<u8> = decode(&signing_root[2..])
-            .map_err(|e| BackendError::InvalidSigningRoot(format!("{}; {}", signing_root, e)))?;
-
         let secret_key: ZeroizeString = self.storage.get_secret_key(public_key)?;
         let secret_key: SecretKey = validate_bls_pair(public_key, secret_key)?;
 
-        let signature = secret_key.sign(H256::from_slice(&signing_root));
+        let signature = secret_key.sign(signing_root);
 
         let signature: String = bytes96_to_hex_string(signature.serialize())
             .expect("Writing to a string should never error.");
@@ -246,6 +234,7 @@ pub mod backend_raw_dir_get_keys {
 pub mod backend_raw_dir_sign_message {
     use crate::tests_commons::*;
     use helpers::*;
+    use types::Hash256;
 
     #[test]
     fn invalid_public_key() {
@@ -255,7 +244,10 @@ pub mod backend_raw_dir_sign_message {
             assert_eq!(
                 backend
                     .clone()
-                    .sign_message(public_key_param, SIGNING_ROOT)
+                    .sign_message(
+                        public_key_param,
+                        Hash256::from_slice(&hex::decode(SIGNING_ROOT).unwrap())
+                    )
                     .unwrap_err()
                     .to_string(),
                 format!("Invalid public key: {}", public_key_param)
@@ -268,58 +260,16 @@ pub mod backend_raw_dir_sign_message {
     }
 
     #[test]
-    fn invalid_signing_root() {
-        let (backend, _tmp_dir) = new_backend_for_signing();
-
-        let test_case = |signing_root_param: &str, error_msg: &str| {
-            assert_eq!(
-                backend
-                    .clone()
-                    .sign_message(PUBLIC_KEY_1, signing_root_param)
-                    .unwrap_err()
-                    .to_string(),
-                error_msg
-            );
-        };
-
-        test_case(
-            "",
-            "Invalid signing root: ; Value should be a non-empty hexadecimal starting with 0x.",
-        );
-        test_case(
-            "0",
-            "Invalid signing root: 0; Value should be a non-empty hexadecimal starting with 0x.",
-        );
-        test_case(
-            "0x",
-            "Invalid signing root: 0x; Value should be a non-empty hexadecimal starting with 0x.",
-        );
-        test_case(
-            "0xa",
-            "Invalid signing root: 0xa; Value should be a non-empty hexadecimal starting with 0x.",
-        );
-        test_case(
-            "deadbeef",
-            "Invalid signing root: deadbeef; Value should be a non-empty hexadecimal starting with 0x.",
-        );
-        test_case(
-            "0xdeadbeefzz",
-            "Invalid signing root: 0xdeadbeefzz; Invalid character \'z\' at position 8",
-        );
-        test_case(
-            "0xdeadbeef1",
-            "Invalid signing root: 0xdeadbeef1; Odd number of digits",
-        );
-    }
-
-    #[test]
     fn storage_error() {
         let (backend, tmp_dir) = new_backend_for_signing();
 
         set_permissions(tmp_dir.path(), 0o40311);
         set_permissions(&tmp_dir.path().join(PUBLIC_KEY_1), 0o40311);
 
-        let result = backend.sign_message(PUBLIC_KEY_1, SIGNING_ROOT);
+        let result = backend.sign_message(
+            PUBLIC_KEY_1,
+            Hash256::from_slice(&hex::decode(SIGNING_ROOT).unwrap()),
+        );
 
         set_permissions(tmp_dir.path(), 0o40755);
         set_permissions(&tmp_dir.path().join(PUBLIC_KEY_1), 0o40755);
@@ -336,7 +286,10 @@ pub mod backend_raw_dir_sign_message {
 
         assert_eq!(
             backend
-                .sign_message(ABSENT_PUBLIC_KEY, SIGNING_ROOT)
+                .sign_message(
+                    ABSENT_PUBLIC_KEY,
+                    Hash256::from_slice(&hex::decode(SIGNING_ROOT).unwrap())
+                )
                 .unwrap_err()
                 .to_string(),
             format!("Key not found: {}", ABSENT_PUBLIC_KEY)
@@ -349,7 +302,10 @@ pub mod backend_raw_dir_sign_message {
 
         assert_eq!(
             backend
-                .sign_message(MISMATCHED_PUBLIC_KEY, SIGNING_ROOT)
+                .sign_message(
+                    MISMATCHED_PUBLIC_KEY,
+                    Hash256::from_slice(&hex::decode(SIGNING_ROOT).unwrap())
+                )
                 .unwrap_err()
                 .to_string(),
             format!("Key mismatch: {}", MISMATCHED_PUBLIC_KEY)
@@ -364,7 +320,10 @@ pub mod backend_raw_dir_sign_message {
             assert_eq!(
                 backend
                     .clone()
-                    .sign_message(public_key, SIGNING_ROOT)
+                    .sign_message(
+                        public_key,
+                        Hash256::from_slice(&hex::decode(SIGNING_ROOT).unwrap())
+                    )
                     .unwrap(),
                 signature
             );

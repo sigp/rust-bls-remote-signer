@@ -1,8 +1,5 @@
 #[derive(Debug)]
 pub enum BackendError {
-    /// Parameter signingRoot is not a hexadecimal representation.
-    InvalidSigningRoot(String),
-
     /// Parameter is not a hexadecimal representation of a BLS public key.
     InvalidPublicKey(String),
 
@@ -25,8 +22,6 @@ pub enum BackendError {
 impl std::fmt::Display for BackendError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            BackendError::InvalidSigningRoot(e) => write!(f, "Invalid signing root: {}", e),
-
             BackendError::InvalidPublicKey(e) => write!(f, "Invalid public key: {}", e),
 
             // Feed it with the public key value used to retrieve it.

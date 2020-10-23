@@ -38,11 +38,6 @@ pub fn sign_message<E: EthSpec, S: Storage>(
     // Parse the request body and compute the signing root.
     let signing_root = get_signing_root::<E>(&req, ctx.spec.clone())?;
 
-    // TODO
-    // Refactor the backend to accept Hash256 instead of string
-    // Save yourself one decoding.
-    let signing_root: String = format!("0x{:x}", signing_root);
-
     // This public key parameter should have been validated by the router.
     // We are just going to extract it from the request.
     let path = req.uri().path().to_string();
@@ -57,17 +52,12 @@ pub fn sign_message<E: EthSpec, S: Storage>(
         ApiError::BadRequest(format!("Unable to get public key from path: {:?}", path))
     })?;
 
-    match ctx.backend.sign_message(&public_key, &signing_root) {
+    match ctx.backend.sign_message(&public_key, signing_root) {
         Ok(signature) => Ok(SignatureApiResponse { signature }),
 
         Err(BackendError::KeyNotFound(_)) => {
             Err(ApiError::NotFound(format!("Key not found: {}", public_key)))
         }
-
-        Err(BackendError::InvalidSigningRoot(_)) => Err(ApiError::BadRequest(format!(
-            "Invalid signingRoot: {}",
-            signing_root
-        ))),
 
         Err(BackendError::InvalidPublicKey(_)) => Err(ApiError::BadRequest(format!(
             "Invalid public key: {}",

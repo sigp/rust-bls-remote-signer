@@ -195,7 +195,7 @@ mod functions {
         );
 
         assert_eq!(
-            hex_string_to_bytes(&SIGNING_ROOT[2..]).unwrap(),
+            hex_string_to_bytes(&SIGNING_ROOT).unwrap(),
             SIGNING_ROOT_BYTES.to_vec()
         );
 

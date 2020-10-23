@@ -47,7 +47,7 @@ pub const SILLY_FILE_NAME_3: &str =
 pub const SILLY_CONTENT_3: &str = "CaptainPlanet";
 
 // Taken from some random string.
-pub const SIGNING_ROOT: &str = "0xb6bb8f3765f93f4f1e7c7348479289c9261399a3c6906685e320071a1a13955c";
+pub const SIGNING_ROOT: &str = "b6bb8f3765f93f4f1e7c7348479289c9261399a3c6906685e320071a1a13955c";
 
 pub const SIGNING_ROOT_BYTES: [u8; 32] = [
     182, 187, 143, 55, 101, 249, 63, 79, 30, 124, 115, 72, 71, 146, 137, 201, 38, 19, 153, 163,
