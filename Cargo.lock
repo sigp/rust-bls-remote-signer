@@ -76,7 +76,7 @@ checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 
 [[package]]
 name = "backend"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "bls",
  "clap",
@@ -154,7 +154,7 @@ dependencies = [
 
 [[package]]
 name = "bls_remote_signer"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "backend",
  "bls",
@@ -258,7 +258,7 @@ dependencies = [
 
 [[package]]
 name = "client"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "backend",
  "clap",
@@ -832,7 +832,7 @@ dependencies = [
 
 [[package]]
 name = "helpers"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "clap",
  "client",
