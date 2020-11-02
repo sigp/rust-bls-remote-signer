@@ -12,4 +12,4 @@ reqwest = { version = "0.10.8", features = ["blocking", "json"] }
 serde = { version = "1.0.116", features = ["derive"] }
 serde_json = "1.0.58"
 tempdir = "0.3.7"
-types = { git = "https://github.com/sigp/lighthouse", rev = "83ae12a1b4719f073ccc3db473ac3a05cf51ac54" }
+types = { git = "https://github.com/sigp/lighthouse", rev = "36bd4d87f04260d6c329c16600f26d7de98fedf9" }

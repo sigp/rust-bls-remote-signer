@@ -20,7 +20,7 @@ use std::fs::{rename as FsRename, OpenOptions};
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::runtime::{Builder as RuntimeBuilder, Runtime};
-use types::{EthSpec, InteropEthSpec, MainnetEthSpec, MinimalEthSpec};
+use types::{EthSpec, MainnetEthSpec, MinimalEthSpec};
 
 const LOG_CHANNEL_SIZE: usize = 2048;
 
@@ -49,17 +49,6 @@ impl EnvironmentBuilder<MainnetEthSpec> {
             runtime: None,
             log: None,
             eth_spec_instance: MainnetEthSpec,
-        }
-    }
-}
-
-impl EnvironmentBuilder<InteropEthSpec> {
-    /// Creates a new builder using the `interop` eth2 specification.
-    pub fn interop() -> Self {
-        Self {
-            runtime: None,
-            log: None,
-            eth_spec_instance: InteropEthSpec,
         }
     }
 }
